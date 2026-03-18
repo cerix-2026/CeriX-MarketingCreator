@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>MedSpa Pulse · Branche Feed</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#F7F5F0;
+  --surface:#FFFFFF;
+  --navy:#0E1C30;
+  --navy2:#1C3150;
+  --gold:#A8843C;
+  --gold-lt:#C9A85C;
+  --coral:#B84030;
+  --sage:#3D7A6A;
+  --text:#1A2535;
+  --muted:#7A8A9A;
+  --border:#E0DBD1;
+  --pill:#EAE7E0;
+  --badge-dk:#D4EDDA;
+  --badge-dk-t:#1A6535;
+  --badge-reg:#FAE0DC;
+  --badge-reg-t:#8C2A1E;
+  --badge-soc:#DDE8F5;
+  --badge-soc-t:#1A3A6A;
+  --badge-gl:#F0EBE0;
+  --badge-gl-t:#6A5020;
+}
+
+html,body{height:100%;background:var(--bg);font-family:'Instrument Sans',sans-serif;color:var(--text);font-size:14px;line-height:1.5}
+
+/* ── SETUP SCREEN ── */
+#setup{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;padding:24px;background:var(--bg);
+}
+.setup-card{
+  background:var(--surface);border:1px solid var(--border);
+  max-width:460px;width:100%;padding:36px;
+}
+.setup-logo{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.setup-logo span{color:var(--gold)}
+.setup-sub{font-size:12px;color:var(--muted);margin-bottom:24px;letter-spacing:.04em}
+.setup-label{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:7px}
+.setup-input{
+  width:100%;padding:11px 14px;border:1.5px solid var(--border);background:var(--bg);
+  font-family:'Instrument Sans',sans-serif;font-size:13px;color:var(--text);
+  outline:none;transition:border-color .2s;margin-bottom:14px;
+}
+.setup-input:focus{border-color:var(--gold)}
+.setup-btn{
+  width:100%;background:var(--navy);color:#fff;border:none;padding:13px;
+  font-family:'Syne',sans-serif;font-size:13px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;cursor:pointer;transition:background .2s
+}
+.setup-btn:hover{background:var(--navy2)}
+.setup-note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.5}
+
+/* ── APP ── */
+#app{display:none;flex-direction:column;min-height:100vh}
+
+/* TOP BAR */
+.topbar{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:0 20px;display:flex;align-items:center;justify-content:space-between;
+  height:52px;position:sticky;top:0;z-index:50;gap:12px;
+}
+.topbar-logo{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;color:var(--navy);white-space:nowrap}
+.topbar-logo span{color:var(--gold)}
+.topbar-date{font-size:11px;color:var(--muted);white-space:nowrap}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.status-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.status-dot.live{background:var(--sage);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.refresh-btn{
+  background:var(--navy);color:#fff;border:none;
+  padding:6px 14px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;white-space:nowrap;
+  transition:background .2s;
+}
+.refresh-btn:hover{background:var(--navy2)}
+.refresh-btn:disabled{opacity:.4;cursor:default}
+.logout-btn{background:none;border:1px solid var(--border);color:var(--muted);
+  padding:5px 10px;font-size:11px;cursor:pointer;font-family:'Instrument Sans',sans-serif}
+.logout-btn:hover{color:var(--text);border-color:var(--text)}
+
+/* FILTER PILLS */
+.filters{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 20px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;
+}
+.filter-pill{
+  padding:5px 14px;border:1.5px solid var(--border);background:transparent;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;cursor:pointer;color:var(--muted);transition:all .15s;
+  user-select:none;
+}
+.filter-pill:hover{border-color:var(--navy);color:var(--navy)}
+.filter-pill.active{background:var(--navy);border-color:var(--navy);color:#fff}
+.filter-count{
+  display:inline-block;background:rgba(255,255,255,.25);color:inherit;
+  font-size:10px;padding:0 5px;margin-left:5px;border-radius:9px;
+  font-weight:700;min-width:18px;text-align:center;
+}
+.filter-pill:not(.active) .filter-count{background:var(--pill);color:var(--muted)}
+
+/* FEED */
+.feed{padding:20px;max-width:860px;margin:0 auto;width:100%;display:flex;flex-direction:column;gap:0}
+
+/* LOADING / EMPTY */
+.feed-loading{text-align:center;padding:60px 20px}
+.spinner{
+  width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 16px;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.feed-loading p{font-size:13px;color:var(--muted)}
+.feed-loading small{font-size:11px;color:var(--border);display:block;margin-top:6px}
+
+.feed-empty{text-align:center;padding:60px 20px;color:var(--muted);font-size:13px}
+
+/* NEWS ITEM */
+.news-item{
+  background:var(--surface);border:1px solid var(--border);
+  border-bottom:none;padding:18px 20px;
+  display:flex;gap:16px;align-items:flex-start;
+  transition:background .15s;cursor:default;
+  animation:fadeSlide .3s ease both;
+}
+.news-item:first-child{border-radius:0}
+.news-item:last-child{border-bottom:1px solid var(--border)}
+.news-item:hover{background:#FDFCF9}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.item-stripe{
+  width:4px;flex-shrink:0;align-self:stretch;border-radius:2px;
+  background:var(--border);
+}
+.item-stripe.global{background:var(--gold)}
+.item-stripe.denmark{background:var(--sage)}
+.item-stripe.regulatory{background:var(--coral)}
+.item-stripe.social{background:var(--navy)}
+
+.item-body{flex:1;min-width:0}
+.item-top{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap}
+.badge{
+  font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  padding:2px 8px;border-radius:2px;white-space:nowrap;
+}
+.badge.global{background:var(--badge-gl);color:var(--badge-gl-t)}
+.badge.denmark{background:var(--badge-dk);color:var(--badge-dk-t)}
+.badge.regulatory{background:var(--badge-reg);color:var(--badge-reg-t)}
+.badge.social{background:var(--badge-soc);color:var(--badge-soc-t)}
+.item-source{font-size:11px;color:var(--muted);font-weight:500}
+.item-dot{color:var(--border);font-size:10px}
+.item-time{font-size:11px;color:var(--muted)}
+
+.item-title{
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:700;
+  color:var(--navy);line-height:1.35;margin-bottom:6px;
+}
+.item-summary{font-size:13px;color:#4A5568;line-height:1.6;margin-bottom:10px}
+.item-tags{display:flex;gap:6px;flex-wrap:wrap}
+.tag{
+  font-size:10px;color:var(--muted);background:var(--pill);
+  padding:2px 9px;letter-spacing:.04em;
+}
+.item-url{
+  font-size:11px;color:var(--gold);text-decoration:none;font-weight:600;
+  display:inline-block;margin-top:8px;
+}
+.item-url:hover{text-decoration:underline}
+
+/* DAY DIVIDER */
+.day-divider{
+  display:flex;align-items:center;gap:12px;padding:20px 0 12px;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--muted);
+}
+.day-divider::before,.day-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.day-divider::before{flex:0 0 0}
+
+/* LOAD MORE */
+.load-more-wrap{padding:24px 0;text-align:center}
+.load-more-btn{
+  background:transparent;border:1.5px solid var(--border);color:var(--text);
+  padding:9px 28px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:.08em;text-transform:uppercase;cursor:pointer;transition:all .2s;
+}
+.load-more-btn:hover{border-color:var(--navy);background:var(--navy);color:#fff}
+
+/* ERROR TOAST */
+.error-bar{
+  background:#FEF2F2;border:1px solid #FECACA;border-left:4px solid var(--coral);
+  padding:12px 18px;margin:16px 20px;font-size:13px;color:#7F1D1D;
+  display:none;
+}
+.error-bar.show{display:block}
+
+/* FOOTER */
+.feed-footer{
+  text-align:center;padding:28px 20px;color:var(--muted);font-size:11px;
+  border-top:1px solid var(--border);margin-top:auto;
+  letter-spacing:.04em;
+}
+.feed-footer strong{color:var(--text);font-weight:600}
+
+/* RESPONSIVE */
+@media(max-width:600px){
+  .topbar{padding:0 14px}
+  .filters{padding:8px 14px}
+  .feed{padding:14px}
+  .news-item{padding:14px 16px}
+  .item-title{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div id="setup">
+  <div class="setup-card">
+    <div class="setup-logo">MedSpa<span>Pulse</span></div>
+    <div class="setup-sub">Dagligt branche-feed · Kosmetisk industri</div>
+    <div class="setup-label">Anthropic API-nøgle</div>
+    <input class="setup-input" type="password" id="keyInput" placeholder="sk-ant-api03-…" autocomplete="off"/>
+    <button class="setup-btn" onclick="activate()">Aktivér feed →</button>
+    <p class="setup-note">🔒 Nøglen gemmes kun lokalt i din browser og sendes direkte til Anthropics API. Den deles aldrig med andre servere.</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+
+  <div class="topbar">
+    <div class="topbar-logo">MedSpa<span>Pulse</span></div>
+    <div class="topbar-date" id="topDate"></div>
+    <div class="topbar-right">
+      <div class="status-dot" id="statusDot"></div>
+      <button class="refresh-btn" id="refreshBtn" onclick="loadNews(true)">↻ Opdatér</button>
+      <button class="logout-btn" onclick="logout()">×</button>
+    </div>
+  </div>
+
+  <div class="filters" id="filters">
+    <div class="filter-pill active" data-cat="all" onclick="setFilter('all',this)">Alle <span class="filter-count" id="cnt-all">–</span></div>
+    <div class="filter-pill" data-cat="global" onclick="setFilter('global',this)">🌍 Globalt <span class="filter-count" id="cnt-global">–</span></div>
+    <div class="filter-pill" data-cat="denmark" onclick="setFilter('denmark',this)">🇩🇰 Danmark <span class="filter-count" id="cnt-denmark">–</span></div>
+    <div class="filter-pill" data-cat="regulatory" onclick="setFilter('regulatory',this)">⚖️ Regulatorisk <span class="filter-count" id="cnt-regulatory">–</span></div>
+    <div class="filter-pill" data-cat="social" onclick="setFilter('social',this)">💬 Socialt <span class="filter-count" id="cnt-social">–</span></div>
+  </div>
+
+  <div class="error-bar" id="errorBar"></div>
+
+  <div class="feed" id="feed">
+    <div class="feed-loading" id="feedLoading">
+      <div class="spinner"></div>
+      <p>Søger efter dagens nyheder…</p>
+      <small>Dette tager 20–40 sekunder første gang</small>
+    </div>
+  </div>
+
+  <div class="feed-footer">
+    Drevet af <strong>Claude + Web Search</strong> · Opdateres dagligt · Kun til internt brug
+  </div>
+
+</div>
+
+<script>
+// ── STATE ──
+const TODAY = new Date().toISOString().split('T')[0];
+const CACHE  = 'msp_cache_' + TODAY;
+const KEYSTORE = 'msp_api_key';
+
+let allItems = [];
+let visibleCount = 20;
+let activeFilter = 'all';
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('topDate').textContent = new Date().toLocaleDateString('da-DK', {
+    weekday:'long', day:'numeric', month:'long', year:'numeric'
+  });
+  const key = localStorage.getItem(KEYSTORE);
+  if (key) {
+    document.getElementById('setup').style.display = 'none';
+    document.getElementById('app').style.display = 'flex';
+    const cached = localStorage.getItem(CACHE);
+    if (cached) {
+      try { renderFeed(JSON.parse(cached)); return; } catch(e) {}
+    }
+    loadNews(false);
+  }
+});
+
+function activate() {
+  const key = document.getElementById('keyInput').value.trim();
+  if (!key.startsWith('sk-')) { alert('Ugyldig nøgle — skal starte med sk-ant-…'); return; }
+  localStorage.setItem(KEYSTORE, key);
+  document.getElementById('setup').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+  loadNews(false);
+}
+
+function logout() {
+  if (!confirm('Fjern API-nøgle og log ud?')) return;
+  localStorage.removeItem(KEYSTORE);
+  location.reload();
+}
+
+// ── FILTER ──
+function setFilter(cat, el) {
+  activeFilter = cat;
+  document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  visibleCount = 20;
+  renderItems();
+}
+
+// ── LOAD NEWS ──
+async function loadNews(force) {
+  if (!force) {
+    const cached = localStorage.getItem(CACHE);
+    if (cached) { try { renderFeed(JSON.parse(cached)); return; } catch(e) {} }
+  }
+
+  document.getElementById('feedLoading').style.display = 'block';
+  document.getElementById('refreshBtn').disabled = true;
+  document.getElementById('statusDot').className = 'status-dot';
+  document.getElementById('errorBar').classList.remove('show');
+  showOnlyLoading();
+
+  try {
+    const items = await fetchNewsFromClaude();
+    localStorage.setItem(CACHE, JSON.stringify(items));
+    renderFeed(items);
+  } catch(err) {
+    showError('Kunne ikke hente nyheder: ' + err.message + '. Tjek din API-nøgle og prøv igen.');
+    document.getElementById('feedLoading').style.display = 'none';
+  } finally {
+    document.getElementById('refreshBtn').disabled = false;
+  }
+}
+
+function showOnlyLoading() {
+  document.getElementById('feed').innerHTML = `
+    <div class="feed-loading" id="feedLoading">
+      <div class="spinner"></div>
+      <p>Søger efter dagens nyheder…</p>
+      <small>Søger globalt, i Danmark, regulatorisk og sociale medier</small>
+    </div>`;
+}
+
+function showError(msg) {
+  const bar = document.getElementById('errorBar');
+  bar.textContent = '⚠ ' + msg;
+  bar.classList.add('show');
+}
+
+// ── API CALL ──
+async function fetchNewsFromClaude() {
+  const today = new Date().toLocaleDateString('da-DK', { day:'numeric', month:'long', year:'numeric' });
+
+  const prompt = `Du er en brancheanalytiker for den kosmetiske medicin og medspa industri.
+Søg på nettet og find de 25 mest relevante og aktuelle nyheder pr. i dag (${today}).
+
+Kategoriser hver nyhed i én af disse fire kategorier:
+- "global": internationale nyheder om medspa, kosmetisk medicin, æstetisk industri, Botox, fillers, lasere, skønhedsklinikker globalt
+- "denmark": nyheder specifikt om Danmark – danske klinikker, dansk lovgivning, danske forbrugertrends
+- "regulatory": myndighedsnyheder – Styrelsen for Patientsikkerhed, Sikkerhedsforeningen for Kosmetisk Behandling, Sundhedsstyrelsen, EU-regulering, lovændringer om botox/fillers/kosmetisk behandling
+- "social": hvad der tales om på sociale medier (Instagram, TikTok, Reddit, Facebook) – enten fra kunder om behandlinger, eller fra klinikejere og fagfolk
+
+Svar KUN med et JSON-array uden markdown-kode-blokke. Hvert objekt har:
+{
+  "title": "Titel på dansk (max 12 ord)",
+  "summary": "2-3 sætninger på dansk der forklarer nyheden",
+  "category": "global|denmark|regulatory|social",
+  "source": "Kildenavn",
+  "tags": ["tag1","tag2"],
+  "url": "https://... eller null"
+}
+
+Inkludér gerne nyheder om:
+- Nye behandlingsmetoder og teknologier
+- Produktlanceringer og tilbagekaldelser
+- Klager og sager hos Styrelsen for Patientsikkerhed
+- Nye regler om hvem der må udføre behandlinger
+- Forbrugertendenser og virale trends
+- Markedsudvikling og åbning/lukning af klinikker
+- Sociale medier diskussioner om behandlinger
+- EU's kosmetikregulering og medicinsk device-forordning
+
+Returnér præcist 25 nyheder som et rent JSON-array.`;
+
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': localStorage.getItem(KEYSTORE),
+      'anthropic-version': '2023-06-01'
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 5000,
+      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || 'HTTP ' + response.status);
+  }
+
+  const data = await response.json();
+  const textBlock = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
+  
+  // Parse JSON – strip any accidental markdown fences
+  const cleaned = textBlock.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  
+  // Find the JSON array
+  const match = cleaned.match(/\[[\s\S]*\]/);
+  if (!match) throw new Error('Intet JSON-array fundet i svaret');
+  
+  return JSON.parse(match[0]);
+}
+
+// ── RENDER ──
+function renderFeed(items) {
+  allItems = Array.isArray(items) ? items : [];
+  
+  // Update counts
+  const cats = ['global','denmark','regulatory','social'];
+  document.getElementById('cnt-all').textContent = allItems.length;
+  cats.forEach(c => {
+    document.getElementById('cnt-' + c).textContent = allItems.filter(i => i.category === c).length;
+  });
+
+  document.getElementById('statusDot').className = 'status-dot live';
+  visibleCount = 20;
+  renderItems();
+}
+
+function renderItems() {
+  const filtered = activeFilter === 'all' ? allItems : allItems.filter(i => i.category === activeFilter);
+  const visible  = filtered.slice(0, visibleCount);
+  const feed     = document.getElementById('feed');
+
+  if (visible.length === 0) {
+    feed.innerHTML = '<div class="feed-empty">Ingen nyheder i denne kategori endnu.</div>';
+    return;
+  }
+
+  const catLabels = { global:'Globalt', denmark:'Danmark', regulatory:'Regulatorisk', social:'Socialt' };
+  const catEmoji  = { global:'🌍', denmark:'🇩🇰', regulatory:'⚖️', social:'💬' };
+
+  let html = `<div class="day-divider">${new Date().toLocaleDateString('da-DK',{weekday:'long',day:'numeric',month:'long'})}</div>`;
+
+  visible.forEach((item, i) => {
+    const cat = item.category || 'global';
+    const tags = (item.tags || []).slice(0,3).map(t => `<span class="tag">${esc(t)}</span>`).join('');
+    const urlHtml = item.url ? `<a class="item-url" href="${esc(item.url)}" target="_blank" rel="noopener">Læs mere →</a>` : '';
+
+    html += `
+    <div class="news-item" style="animation-delay:${i*30}ms">
+      <div class="item-stripe ${cat}"></div>
+      <div class="item-body">
+        <div class="item-top">
+          <span class="badge ${cat}">${catEmoji[cat]} ${catLabels[cat]}</span>
+          <span class="item-source">${esc(item.source||'Ukendt kilde')}</span>
+          <span class="item-dot">·</span>
+          <span class="item-time">I dag</span>
+        </div>
+        <div class="item-title">${esc(item.title||'')}</div>
+        <div class="item-summary">${esc(item.summary||'')}</div>
+        ${tags ? `<div class="item-tags">${tags}</div>` : ''}
+        ${urlHtml}
+      </div>
+    </div>`;
+  });
+
+  if (filtered.length > visibleCount) {
+    html += `<div class="load-more-wrap">
+      <button class="load-more-btn" onclick="loadMore()">Vis flere (${filtered.length - visibleCount} tilbage)</button>
+    </div>`;
+  }
+
+  feed.innerHTML = html;
+}
+
+function loadMore() {
+  visibleCount += 20;
+  renderItems();
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
+</body>
+</html>
