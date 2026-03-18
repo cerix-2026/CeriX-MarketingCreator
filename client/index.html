@@ -652,9 +652,9 @@ function NewsPage() {
             className="btn btn-gold btn-sm"
             style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
             onClick={() => generateContent(item)}
-            disabled={generating === item.title}
+            disabled={globalJobs.isRunning('generate-' + item.title.slice(0, 20))}
           >
-            {generating === item.title ? <span className="spinner" /> : <><Icon n="sparkle" /> Skab indhold</>}
+            {globalJobs.isRunning('generate-' + item.title.slice(0, 20)) ? <span className="spinner" /> : <><Icon n="sparkle" /> Skab indhold</>}
           </button>
         </div>
       ))}

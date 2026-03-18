@@ -95,6 +95,9 @@ Returnér KUN et JSON-objekt (ingen markdown):
     });
 
     const data = await response.json();
+    if (!data.content || data.error) {
+      return res.status(500).json({ error: data.error?.message || 'AI API fejl: ' + JSON.stringify(data.error || data).slice(0, 200) });
+    }
     const text = data.content.filter(b => b.type === 'text').map(b => b.text).join('');
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) return res.status(500).json({ error: 'Parse fejl fra AI' });
