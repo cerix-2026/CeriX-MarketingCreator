@@ -262,11 +262,55 @@ const Icon = ({ n, size = 14 }) => {
   return <span style={{ fontSize: size, lineHeight: 1 }}>{icons[n] || n}</span>;
 };
 
+// ── GLOBAL BACKGROUND JOBS ──
+// Keeps API calls alive even when navigating away from the page
+const globalJobs = {
+  _listeners: [],
+  _jobs: {},
+  _toasts: [],
+  subscribe(fn) { globalJobs._listeners.push(fn); return () => { globalJobs._listeners = globalJobs._listeners.filter(f => f !== fn); }; },
+  _notify() { globalJobs._listeners.forEach(fn => fn({ ...globalJobs._jobs })); },
+  toast(msg, type = 'success') {
+    const id = Date.now();
+    globalJobs._toasts.push({ id, msg, type });
+    globalJobs._listeners.forEach(fn => fn({ ...globalJobs._jobs }));
+    setTimeout(() => { globalJobs._toasts = globalJobs._toasts.filter(t => t.id !== id); globalJobs._notify(); }, 4000);
+  },
+  isRunning(key) { return !!globalJobs._jobs[key]; },
+  async run(key, label, fn) {
+    if (globalJobs._jobs[key]) return;
+    globalJobs._jobs[key] = { label, startedAt: Date.now() };
+    globalJobs._notify();
+    try {
+      const result = await fn();
+      delete globalJobs._jobs[key];
+      globalJobs._notify();
+      return result;
+    } catch (err) {
+      delete globalJobs._jobs[key];
+      globalJobs._notify();
+      globalJobs.toast(err.message || 'Fejl', 'error');
+      throw err;
+    }
+  }
+};
+
+function useGlobalJobs() {
+  const [jobs, setJobs] = useState({});
+  const [toasts, setToasts] = useState([]);
+  useEffect(() => {
+    const unsub = globalJobs.subscribe(j => { setJobs(j); setToasts([...globalJobs._toasts]); });
+    return unsub;
+  }, []);
+  return { jobs, toasts, hasJobs: Object.keys(jobs).length > 0 };
+}
+
 // ── APP ROOT ──
 function App() {
   const [user, setUser] = useState(null);
   const [page, setPage] = useState('dashboard');
   const [loading, setLoading] = useState(true);
+  const { jobs, toasts, hasJobs } = useGlobalJobs();
 
   useEffect(() => {
     const token = localStorage.getItem('cerix_token');
@@ -292,7 +336,13 @@ function App() {
     <div className="app-shell">
       <Sidebar page={page} setPage={setPage} user={user} logout={logout} />
       <div className="main-area">
-        <TopNav page={page} user={user} />
+        <TopNav page={page} user={user} jobs={jobs} />
+        {/* Global toasts */}
+        <div style={{ position: 'fixed', top: 60, right: 20, zIndex: 200, display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 360 }}>
+          {toasts.map(t => (
+            <div key={t.id} className={`alert alert-${t.type}`} style={{ margin: 0, animation: 'fadeSlide .2s ease', boxShadow: '0 4px 12px rgba(0,0,0,.15)' }}>{t.msg}</div>
+          ))}
+        </div>
         <div className="page-content">
           {page === 'dashboard' && <DashboardPage setPage={setPage} />}
           {page === 'news' && <NewsPage />}
@@ -408,16 +458,27 @@ function Sidebar({ page, setPage, user, logout }) {
 }
 
 // ── TOPNAV ──
-function TopNav({ page, user }) {
+function TopNav({ page, user, jobs = {} }) {
   const titles = {
     dashboard: 'Dashboard', news: 'Branche Feed', content: 'Indholdsproduktion',
     competitors: 'Konkurrentanalyse', visual: 'Visual Studio', performance: 'Performance Tracking',
     brand: 'Brand Design Guide', knowledge: 'Knowledge Base', images: 'Billedarkiv', users: 'Brugeradgang'
   };
+  const runningJobs = Object.values(jobs);
   return (
     <div className="topnav">
       <div className="topnav-title">{titles[page] || page}</div>
       <div className="topnav-spacer" />
+      {runningJobs.length > 0 && (
+        <div className="row" style={{ gap: 8 }}>
+          {runningJobs.map((j, i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'rgba(201,168,92,.1)', border: '1px solid rgba(201,168,92,.3)', padding: '3px 10px', borderRadius: 3, fontSize: 11, fontWeight: 600, color: 'var(--gold)' }}>
+              <span className="spinner" style={{ width: 12, height: 12, borderWidth: 1.5 }} />
+              {j.label}
+            </span>
+          ))}
+        </div>
+      )}
       <span className="text-muted font-mono">{new Date().toLocaleDateString('da-DK', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
       <span className={`badge badge-${user.role}`}>{user.role}</span>
     </div>
@@ -508,11 +569,10 @@ function DashboardPage({ setPage }) {
 // ── NEWS FEED ──
 function NewsPage() {
   const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
-  const [generating, setGenerating] = useState(null);
   const [toast, setToast] = useState(null);
   const cacheKey = 'cerix_news_' + new Date().toISOString().split('T')[0];
+  const loading = globalJobs.isRunning('news-fetch');
 
   const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
 
@@ -521,20 +581,28 @@ function NewsPage() {
     if (cached) { try { setItems(JSON.parse(cached)); return; } catch {} }
   }, []);
 
-  const fetchNews = async () => {
-    setLoading(true);
-    const res = await api.post('/api/news/fetch', {});
-    setLoading(false);
-    if (Array.isArray(res)) { setItems(res); localStorage.setItem(cacheKey, JSON.stringify(res)); }
-    else showToast(res.error || 'Fejl', 'error');
+  const fetchNews = () => {
+    globalJobs.run('news-fetch', 'Henter nyheder...', async () => {
+      const res = await api.post('/api/news/fetch', {});
+      if (Array.isArray(res)) {
+        setItems(res);
+        localStorage.setItem(cacheKey, JSON.stringify(res));
+        globalJobs.toast(`${res.length} nyheder hentet!`);
+      } else {
+        globalJobs.toast(res.error || 'Fejl ved hentning', 'error');
+      }
+      return res;
+    });
   };
 
-  const generateContent = async (item) => {
-    setGenerating(item.title);
-    const res = await api.post('/api/content/generate', { newsItem: item });
-    setGenerating(null);
-    if (res.error) showToast(res.error, 'error');
-    else showToast('Indhold genereret! Se under "Indhold".');
+  const generateContent = (item) => {
+    const jobKey = 'generate-' + item.title.slice(0, 20);
+    globalJobs.run(jobKey, 'Genererer indhold...', async () => {
+      const res = await api.post('/api/content/generate', { newsItem: item });
+      if (res.error) globalJobs.toast(res.error, 'error');
+      else globalJobs.toast('Indhold genereret! Se under "Indhold".');
+      return res;
+    });
   };
 
   const cats = ['all', 'global', 'denmark', 'regulatory', 'social'];
@@ -963,8 +1031,8 @@ function BrandPage({ user }) {
 function KnowledgePage({ user }) {
   const [kb, setKb] = useState(null);
   const [tab, setTab] = useState('treatments');
-  const [crawling, setCrawling] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
+  const crawling = globalJobs.isRunning('kb-crawl');
   const [toast, setToast] = useState(null);
   const canEdit = user.role !== 'viewer';
 
@@ -972,13 +1040,14 @@ function KnowledgePage({ user }) {
   const load = () => api.get('/api/knowledge').then(d => { if (!d.error) setKb(d); });
   useEffect(() => { load(); }, []);
 
-  const crawl = async () => {
+  const crawl = () => {
     if (!confirm('Crawler cerix.dk og opdaterer Knowledge Base. Fortsæt?')) return;
-    setCrawling(true);
-    const res = await api.post('/api/knowledge/crawl', {});
-    setCrawling(false);
-    if (res.error) showToast(res.error, 'error');
-    else { showToast(`Fandt ${res.treatments} behandlinger og ${res.faqs} FAQs`); load(); }
+    globalJobs.run('kb-crawl', 'Crawler cerix.dk...', async () => {
+      const res = await api.post('/api/knowledge/crawl', {});
+      if (res.error) globalJobs.toast(res.error, 'error');
+      else { globalJobs.toast(`Fandt ${res.treatments} behandlinger og ${res.faqs} FAQs`); load(); }
+      return res;
+    });
   };
 
   const deleteTreatment = async (id) => {
@@ -1323,11 +1392,11 @@ function AddUserModal({ onClose, onSave }) {
 function CompetitorsPage({ user }) {
   const [ads, setAds] = useState([]);
   const [insights, setInsights] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [analyzing, setAnalyzing] = useState(false);
   const [tab, setTab] = useState('ads');
   const [toast, setToast] = useState(null);
   const canEdit = user.role !== 'viewer';
+  const loading = globalJobs.isRunning('comp-fetch');
+  const analyzing = globalJobs.isRunning('comp-analyze');
 
   const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
   const load = () => {
@@ -1336,20 +1405,22 @@ function CompetitorsPage({ user }) {
   };
   useEffect(() => { load(); }, []);
 
-  const fetchAds = async () => {
-    setLoading(true);
-    const res = await api.post('/api/competitors/fetch', {});
-    setLoading(false);
-    if (res.error) showToast(res.error, 'error');
-    else { showToast(`${res.count} annoncer hentet (${res.source})`); load(); }
+  const fetchAds = () => {
+    globalJobs.run('comp-fetch', 'Henter konkurrentannoncer...', async () => {
+      const res = await api.post('/api/competitors/fetch', {});
+      if (res.error) globalJobs.toast(res.error, 'error');
+      else { globalJobs.toast(`${res.count} annoncer hentet (${res.source})`); load(); }
+      return res;
+    });
   };
 
-  const analyze = async () => {
-    setAnalyzing(true);
-    const res = await api.post('/api/competitors/analyze', {});
-    setAnalyzing(false);
-    if (res.error) showToast(res.error, 'error');
-    else { showToast('Analyse klar!'); setInsights(res.insight); setTab('insights'); }
+  const analyze = () => {
+    globalJobs.run('comp-analyze', 'Analyserer konkurrenter...', async () => {
+      const res = await api.post('/api/competitors/analyze', {});
+      if (res.error) globalJobs.toast(res.error, 'error');
+      else { globalJobs.toast('Analyse klar!'); setInsights(res.insight); setTab('insights'); }
+      return res;
+    });
   };
 
   return (
