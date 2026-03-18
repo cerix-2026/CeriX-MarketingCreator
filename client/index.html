@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>CeriX Marketing Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#1A2E4A;--navy2:#243D61;--gold:#C9A85C;--gold-lt:#E8D5A3;
+  --cream:#F7F5F0;--white:#FFFFFF;--sage:#3D7A6A;--coral:#B84030;
+  --border:#E0DBD1;--text:#1A2535;--muted:#7A8A9A;--slate:#4A5568;
+  --surface:#FFFFFF;--bg:#F2F0EB;
+  --sidebar:220px;
+}
+html,body,#root{height:100%;background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);font-size:14px}
+button{cursor:pointer;font-family:'DM Sans',sans-serif}
+input,textarea,select{font-family:'DM Sans',sans-serif;outline:none}
+a{text-decoration:none;color:inherit}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── LAYOUT ── */
+.app-shell{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:var(--sidebar);background:var(--navy);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto}
+.main-area{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topnav{height:52px;background:var(--white);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;gap:12px;flex-shrink:0}
+.page-content{flex:1;overflow-y:auto;padding:28px 28px 40px}
+
+/* SIDEBAR */
+.sidebar-logo{padding:20px 18px 8px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.sidebar-logo-text{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#fff;line-height:1.1}
+.sidebar-logo-sub{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.35);margin-top:1px}
+.sidebar-logo-dot{width:28px;height:28px;background:var(--gold);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
+.nav-section{padding:16px 10px 4px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.28);font-weight:500}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;margin:1px 8px;border-radius:6px;cursor:pointer;color:rgba(255,255,255,.55);font-size:13px;font-weight:500;transition:all .15s;user-select:none}
+.nav-item:hover{background:rgba(255,255,255,.07);color:rgba(255,255,255,.85)}
+.nav-item.active{background:rgba(201,168,92,.15);color:var(--gold)}
+.nav-item .icon{width:16px;height:16px;opacity:.7;flex-shrink:0;font-size:14px;text-align:center}
+.nav-item.active .icon{opacity:1}
+.nav-badge{margin-left:auto;background:var(--gold);color:var(--navy);font-size:9px;font-weight:700;padding:1px 6px;border-radius:8px;min-width:18px;text-align:center}
+.sidebar-footer{margin-top:auto;border-top:1px solid rgba(255,255,255,.08);padding:12px}
+.user-chip{display:flex;align-items:center;gap:9px;padding:8px;border-radius:6px;cursor:pointer}
+.user-chip:hover{background:rgba(255,255,255,.06)}
+.user-avatar{width:30px;height:30px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--navy);flex-shrink:0}
+.user-info{flex:1;min-width:0}
+.user-name{font-size:12px;font-weight:600;color:rgba(255,255,255,.8);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-role{font-size:10px;color:rgba(255,255,255,.35);text-transform:capitalize}
+
+/* TOPNAV */
+.topnav-title{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--navy)}
+.topnav-spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 16px;border:none;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;transition:all .15s;border-radius:4px}
+.btn-primary{background:var(--navy);color:#fff}.btn-primary:hover{background:var(--navy2)}
+.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold-lt)}
+.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--text)}.btn-outline:hover{border-color:var(--navy);background:var(--navy);color:#fff}
+.btn-danger{background:var(--coral);color:#fff}.btn-danger:hover{opacity:.9}
+.btn-sm{padding:5px 12px;font-size:11px}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--muted);padding:5px 10px;font-size:11px;border-radius:3px}
+.btn-ghost:hover{color:var(--text);border-color:var(--text)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:20px}
+.card-sm{padding:14px 16px}
+.card-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--navy);margin-bottom:14px}
+.section-title{font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+
+/* GRID */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.gap-12{gap:12px!important}
+
+/* FORM */
+.field{margin-bottom:16px}
+.label{display:block;font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);margin-bottom:6px}
+.input{width:100%;padding:9px 12px;border:1.5px solid var(--border);background:var(--cream);font-size:13px;color:var(--text);border-radius:3px;transition:border-color .15s}
+.input:focus{border-color:var(--gold);background:#fff}
+.textarea{min-height:90px;resize:vertical;line-height:1.55}
+.select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237A8A9A'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+
+/* BADGE */
+.badge{display:inline-block;font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 8px;border-radius:2px}
+.badge-global{background:#F0EBE0;color:#6A5020}
+.badge-denmark{background:#D4EDDA;color:#1A6535}
+.badge-regulatory{background:#FAE0DC;color:#8C2A1E}
+.badge-social{background:#DDE8F5;color:#1A3A6A}
+.badge-draft{background:#F0EBE0;color:#6A5020}
+.badge-approved{background:#D4EDDA;color:#1A6535}
+.badge-published{background:#DDE8F5;color:#1A3A6A}
+.badge-admin{background:rgba(184,64,48,.12);color:var(--coral)}
+.badge-editor{background:rgba(61,122,106,.12);color:var(--sage)}
+.badge-viewer{background:rgba(122,138,154,.12);color:var(--muted)}
+
+/* STAT CARDS */
+.stat-card{background:var(--white);border:1px solid var(--border);padding:18px 20px;border-radius:6px}
+.stat-value{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:var(--navy);line-height:1}
+.stat-label{font-size:11px;color:var(--muted);margin-top:4px;letter-spacing:.04em}
+.stat-trend{font-size:11px;color:var(--sage);margin-top:6px;font-weight:500}
+
+/* TABLE */
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th{text-align:left;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--cream)}
+
+/* NEWS FEED */
+.news-item{background:var(--white);border:1px solid var(--border);border-bottom:none;padding:14px 16px;display:flex;gap:12px;transition:background .1s}
+.news-item:last-child{border-bottom:1px solid var(--border)}
+.news-item:hover{background:#FDFCF9}
+.news-stripe{width:3px;flex-shrink:0;align-self:stretch;border-radius:2px}
+.stripe-global{background:var(--gold)}
+.stripe-denmark{background:var(--sage)}
+.stripe-regulatory{background:var(--coral)}
+.stripe-social{background:var(--navy)}
+.news-title{font-size:13px;font-weight:600;color:var(--navy);line-height:1.3;margin-bottom:4px}
+.news-summary{font-size:12px;color:var(--slate);line-height:1.55;margin-bottom:8px}
+.news-meta{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);flex-wrap:wrap}
+
+/* IMAGE GRID */
+.img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.img-card{border:1px solid var(--border);border-radius:4px;overflow:hidden;position:relative;background:var(--cream)}
+.img-card img{width:100%;height:140px;object-fit:cover;display:block}
+.img-card-footer{padding:7px 9px;font-size:11px;color:var(--slate)}
+.img-card-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.img-badge{position:absolute;top:6px;left:6px;font-size:9px;font-weight:700;background:var(--gold);color:var(--navy);padding:2px 6px;border-radius:2px}
+
+/* COLOR SWATCH */
+.swatch{width:40px;height:40px;border-radius:4px;border:1px solid var(--border);cursor:pointer;position:relative}
+.swatch input[type=color]{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;border:none;padding:0}
+
+/* CONTENT CARD */
+.content-card{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:18px;margin-bottom:12px}
+.content-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.content-section{background:var(--cream);border:1px solid var(--border);padding:12px;border-radius:4px;margin-bottom:10px}
+.content-section-label{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.content-section-text{font-size:13px;line-height:1.6;color:var(--text)}
+
+/* TABS */
+.tabs{display:flex;border-bottom:2px solid var(--border);margin-bottom:20px;gap:0}
+.tab{padding:9px 18px;font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;user-select:none}
+.tab:hover{color:var(--navy)}
+.tab.active{color:var(--navy);border-bottom-color:var(--gold)}
+
+/* FILTER PILLS */
+.pills{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:16px}
+.pill{padding:4px 12px;border:1.5px solid var(--border);background:transparent;font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;color:var(--muted);border-radius:2px;transition:all .12s;user-select:none}
+.pill:hover{border-color:var(--navy);color:var(--navy)}
+.pill.active{background:var(--navy);border-color:var(--navy);color:#fff}
+
+/* UPLOAD ZONE */
+.upload-zone{border:2px dashed var(--border);border-radius:6px;padding:32px;text-align:center;cursor:pointer;transition:all .15s;background:var(--cream)}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:rgba(201,168,92,.04)}
+.upload-zone-icon{font-size:28px;margin-bottom:10px;opacity:.4}
+.upload-zone-text{font-size:13px;color:var(--muted)}
+.upload-zone-sub{font-size:11px;color:var(--border);margin-top:4px}
+
+/* MODALS */
+.modal-bg{position:fixed;inset:0;background:rgba(26,46,74,.5);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal{background:var(--white);border-radius:8px;padding:28px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;animation:modalIn .18s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
+.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--navy);margin-bottom:18px}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:1px solid var(--border)}
+
+/* ALERTS */
+.alert{padding:12px 14px;border-radius:4px;font-size:13px;margin-bottom:14px}
+.alert-error{background:#FEF2F2;border:1px solid #FECACA;color:#7F1D1D;border-left:4px solid var(--coral)}
+.alert-success{background:#F0FDF4;border:1px solid #BBF7D0;color:#14532D;border-left:4px solid var(--sage)}
+.alert-info{background:#EFF6FF;border:1px solid #BFDBFE;color:#1E3A5F;border-left:4px solid var(--navy)}
+
+/* SPINNER */
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-lg{width:36px;height:36px;border-width:3px}
+.loading-center{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:14px;color:var(--muted);font-size:13px}
+
+/* DIVIDERS */
+.divider{height:1px;background:var(--border);margin:20px 0}
+.row{display:flex;align-items:center;gap:12px}
+.row-between{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.col{display:flex;flex-direction:column;gap:12px}
+.flex-1{flex:1}
+.mt-4{margin-top:4px}.mt-8{margin-top:8px}.mt-12{margin-top:12px}.mt-16{margin-top:16px}.mt-20{margin-top:20px}
+.mb-4{margin-bottom:4px}.mb-8{margin-bottom:8px}.mb-12{margin-bottom:12px}.mb-16{margin-bottom:16px}
+.text-muted{color:var(--muted);font-size:12px}
+.text-sm{font-size:12px}
+.font-mono{font-family:'DM Mono',monospace;font-size:11px}
+.truncate{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.w-full{width:100%}
+.relevance-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:6px}
+.relevance-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .5s}
+
+/* LOGIN */
+.login-page{min-height:100vh;background:var(--navy);display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{background:var(--white);padding:40px;max-width:420px;width:100%;border-radius:8px}
+.login-logo{font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:var(--navy);margin-bottom:4px}
+.login-logo span{color:var(--gold)}
+.login-sub{font-size:12px;color:var(--muted);margin-bottom:28px;letter-spacing:.04em}
+
+/* BRAND PREVIEW */
+.brand-preview-bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.font-preview{padding:10px 14px;border:1px solid var(--border);border-radius:4px;text-align:center;min-width:120px}
+.font-preview-name{font-size:10px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace}
+
+/* TREATMENT CARD */
+.treatment-card{background:var(--white);border:1px solid var(--border);border-radius:6px;padding:14px 16px;display:flex;align-items:flex-start;gap:12px}
+.treatment-body{flex:1;min-width:0}
+.treatment-name{font-weight:600;font-size:13px;color:var(--navy);margin-bottom:2px}
+.treatment-cat{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.treatment-desc{font-size:12px;color:var(--slate);line-height:1.5}
+
+@media(max-width:900px){
+  .sidebar{width:52px}
+  .nav-item span,.nav-section,.user-info,.sidebar-logo-text,.sidebar-logo-sub{display:none}
+  .sidebar-logo{padding:14px 8px;justify-content:center}
+  .nav-item{justify-content:center;padding:10px;margin:1px 4px}
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+
+const { useState, useEffect, useCallback, useRef } = React;
+
+// ── API CLIENT ──
+const api = {
+  token: () => localStorage.getItem('cerix_token'),
+  headers: () => ({ 'Content-Type': 'application/json', Authorization: 'Bearer ' + api.token() }),
+  get: (url) => fetch(url, { headers: api.headers() }).then(r => r.json()),
+  post: (url, body) => fetch(url, { method: 'POST', headers: api.headers(), body: JSON.stringify(body) }).then(r => r.json()),
+  put: (url, body) => fetch(url, { method: 'PUT', headers: api.headers(), body: JSON.stringify(body) }).then(r => r.json()),
+  del: (url) => fetch(url, { method: 'DELETE', headers: api.headers() }).then(r => r.json()),
+  upload: (url, formData) => fetch(url, { method: 'POST', headers: { Authorization: 'Bearer ' + api.token() }, body: formData }).then(r => r.json()),
+};
+
+// ── ICONS ──
+const Icon = ({ n, size = 14 }) => {
+  const icons = {
+    dashboard: '◈', news: '◎', brand: '◇', kb: '◉', images: '▣',
+    users: '◍', content: '◆', settings: '⚙', logout: '→',
+    plus: '+', edit: '✎', trash: '✕', check: '✓', x: '✕',
+    upload: '↑', refresh: '↻', copy: '⧉', eye: '◉', star: '★',
+    warning: '⚠', info: 'ℹ', arrow: '→', back: '←', generate: '✦',
+    newsletter: '✉', ad: '▤', sparkle: '✦',
+    competitors: '◬', visual: '◐', export: '↗', performance: '◕',
+    download: '↓', chart: '▥',
+  };
+  return <span style={{ fontSize: size, lineHeight: 1 }}>{icons[n] || n}</span>;
+};
+
+// ── APP ROOT ──
+function App() {
+  const [user, setUser] = useState(null);
+  const [page, setPage] = useState('dashboard');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem('cerix_token');
+    if (token) {
+      api.get('/api/auth/me').then(u => {
+        if (!u.error) { setUser(u); }
+        else { localStorage.removeItem('cerix_token'); }
+        setLoading(false);
+      }).catch(() => { setLoading(false); });
+    } else { setLoading(false); }
+  }, []);
+
+  const logout = () => { localStorage.removeItem('cerix_token'); setUser(null); };
+
+  if (loading) return (
+    <div className="loading-center" style={{ minHeight: '100vh', background: 'var(--navy)' }}>
+      <div className="spinner spinner-lg" style={{ borderTopColor: 'var(--gold)' }} />
+    </div>
+  );
+  if (!user) return <LoginPage onLogin={(u, t) => { localStorage.setItem('cerix_token', t); setUser(u); }} />;
+
+  return (
+    <div className="app-shell">
+      <Sidebar page={page} setPage={setPage} user={user} logout={logout} />
+      <div className="main-area">
+        <TopNav page={page} user={user} />
+        <div className="page-content">
+          {page === 'dashboard' && <DashboardPage setPage={setPage} />}
+          {page === 'news' && <NewsPage />}
+          {page === 'content' && <ContentPage />}
+          {page === 'competitors' && <CompetitorsPage user={user} />}
+          {page === 'visual' && <VisualPage user={user} />}
+          {page === 'performance' && <PerformancePage />}
+          {page === 'brand' && <BrandPage user={user} />}
+          {page === 'knowledge' && <KnowledgePage user={user} />}
+          {page === 'images' && <ImagesPage user={user} />}
+          {page === 'users' && <UsersPage user={user} />}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── LOGIN ──
+function LoginPage({ onLogin }) {
+  const [email, setEmail] = useState('admin@cerix.dk');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const submit = async (e) => {
+    e.preventDefault();
+    setLoading(true); setError('');
+    const res = await fetch('/api/auth/login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    }).then(r => r.json());
+    setLoading(false);
+    if (res.error) setError(res.error);
+    else onLogin(res.user, res.token);
+  };
+
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-logo">CeriX<span>Engine</span></div>
+        <div className="login-sub">Marketing Intelligence Platform</div>
+        {error && <div className="alert alert-error">{error}</div>}
+        <form onSubmit={submit}>
+          <div className="field">
+            <label className="label">Email</label>
+            <input className="input" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+          </div>
+          <div className="field">
+            <label className="label">Adgangskode</label>
+            <input className="input" type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="cerix2024" required />
+          </div>
+          <button className="btn btn-gold w-full mt-8" type="submit" disabled={loading}>
+            {loading ? <span className="spinner" /> : 'Log ind →'}
+          </button>
+        </form>
+        <p className="text-muted mt-12" style={{ textAlign: 'center' }}>Default: admin@cerix.dk / cerix2024</p>
+      </div>
+    </div>
+  );
+}
+
+// ── SIDEBAR ──
+function Sidebar({ page, setPage, user, logout }) {
+  const navItems = [
+    { id: 'dashboard', icon: 'dashboard', label: 'Dashboard', section: 'OVERBLIK' },
+    { id: 'news', icon: 'news', label: 'Branche Feed', section: null },
+    { id: 'content', icon: 'content', label: 'Indhold', section: 'PRODUKTION' },
+    { id: 'competitors', icon: 'competitors', label: 'Konkurrenter', section: null },
+    { id: 'visual', icon: 'visual', label: 'Visual Studio', section: null },
+    { id: 'performance', icon: 'performance', label: 'Performance', section: 'INDSIGT' },
+    { id: 'brand', icon: 'brand', label: 'Brand Guide', section: 'FUNDAMENT' },
+    { id: 'knowledge', icon: 'kb', label: 'Knowledge Base', section: null },
+    { id: 'images', icon: 'images', label: 'Billedarkiv', section: null },
+    ...(user.role === 'admin' ? [{ id: 'users', icon: 'users', label: 'Brugere', section: 'ADMIN' }] : []),
+  ];
+
+  let lastSection = null;
+  return (
+    <div className="sidebar">
+      <div className="sidebar-logo">
+        <div className="sidebar-logo-dot">C</div>
+        <div>
+          <div className="sidebar-logo-text">CeriX</div>
+          <div className="sidebar-logo-sub">Marketing Engine</div>
+        </div>
+      </div>
+      <div style={{ flex: 1, paddingBottom: 8 }}>
+        {navItems.map(item => {
+          const showSection = item.section && item.section !== lastSection;
+          if (item.section) lastSection = item.section;
+          return (
+            <React.Fragment key={item.id}>
+              {showSection && <div className="nav-section">{item.section}</div>}
+              <div className={`nav-item${page === item.id ? ' active' : ''}`} onClick={() => setPage(item.id)}>
+                <span className="icon"><Icon n={item.icon} /></span>
+                <span>{item.label}</span>
+              </div>
+            </React.Fragment>
+          );
+        })}
+      </div>
+      <div className="sidebar-footer">
+        <div className="user-chip" onClick={logout} title="Log ud">
+          <div className="user-avatar">{(user.name || 'U')[0].toUpperCase()}</div>
+          <div className="user-info">
+            <div className="user-name">{user.name}</div>
+            <div className="user-role">{user.role}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── TOPNAV ──
+function TopNav({ page, user }) {
+  const titles = {
+    dashboard: 'Dashboard', news: 'Branche Feed', content: 'Indholdsproduktion',
+    competitors: 'Konkurrentanalyse', visual: 'Visual Studio', performance: 'Performance Tracking',
+    brand: 'Brand Design Guide', knowledge: 'Knowledge Base', images: 'Billedarkiv', users: 'Brugeradgang'
+  };
+  return (
+    <div className="topnav">
+      <div className="topnav-title">{titles[page] || page}</div>
+      <div className="topnav-spacer" />
+      <span className="text-muted font-mono">{new Date().toLocaleDateString('da-DK', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
+      <span className={`badge badge-${user.role}`}>{user.role}</span>
+    </div>
+  );
+}
+
+// ── DASHBOARD ──
+function DashboardPage({ setPage }) {
+  const [stats, setStats] = useState({ content: 0, images: 0, treatments: 0, users: 0 });
+
+  useEffect(() => {
+    Promise.all([
+      api.get('/api/content'),
+      api.get('/api/images'),
+      api.get('/api/knowledge'),
+      api.get('/api/users'),
+    ]).then(([content, images, kb, users]) => {
+      setStats({
+        content: Array.isArray(content) ? content.length : 0,
+        images: Array.isArray(images) ? images.length : 0,
+        treatments: Array.isArray(kb.treatments) ? kb.treatments.length : 0,
+        users: Array.isArray(users) ? users.length : 0,
+      });
+    }).catch(() => {});
+  }, []);
+
+  const cards = [
+    { label: 'Indholdsstykker', value: stats.content, trend: 'I kø og produceret', page: 'content', color: 'var(--gold)' },
+    { label: 'Billeder i arkiv', value: stats.images, trend: 'Brand DNA + uploads', page: 'images', color: 'var(--sage)' },
+    { label: 'Behandlinger i KB', value: stats.treatments, trend: 'Fra cerix.dk + manuelt', page: 'knowledge', color: 'var(--navy)' },
+    { label: 'Aktive brugere', value: stats.users, trend: 'Admin + editors', page: 'users', color: 'var(--coral)' },
+  ];
+
+  const steps = [
+    { n: '01', title: 'Brand Guide', desc: 'Definer farver, fonte og tone of voice', page: 'brand', done: false },
+    { n: '02', title: 'Knowledge Base', desc: 'Crawler cerix.dk og tilføj ydelser manuelt', page: 'knowledge', done: false },
+    { n: '03', title: 'Billedarkiv', desc: 'Upload Brand DNA billeder som style reference', page: 'images', done: false },
+    { n: '04', title: 'Branche Feed', desc: 'Hent dagens nyheder og find indholdsvinkel', page: 'news', done: false },
+    { n: '05', title: 'Skab Indhold', desc: 'AI genererer nyhedsbrev + Meta Ads automatisk', page: 'content', done: false },
+  ];
+
+  return (
+    <div>
+      <div className="grid-4" style={{ marginBottom: 24 }}>
+        {cards.map(c => (
+          <div key={c.label} className="stat-card" style={{ borderTop: `3px solid ${c.color}`, cursor: 'pointer' }} onClick={() => setPage(c.page)}>
+            <div className="stat-value">{c.value}</div>
+            <div className="stat-label">{c.label}</div>
+            <div className="stat-trend">{c.trend}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid-2" style={{ gap: 20 }}>
+        <div className="card">
+          <div className="card-title">Kom i gang — 5 trin</div>
+          {steps.map((s, i) => (
+            <div key={s.n} className="row" style={{ padding: '11px 0', borderBottom: i < steps.length - 1 ? '1px solid var(--border)' : 'none', cursor: 'pointer' }} onClick={() => setPage(s.page)}>
+              <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'var(--cream)', border: '1.5px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--muted)', flexShrink: 0, fontFamily: 'DM Mono, monospace' }}>{s.n}</div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--navy)' }}>{s.title}</div>
+                <div className="text-muted">{s.desc}</div>
+              </div>
+              <span style={{ color: 'var(--gold)', fontSize: 12 }}>→</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="card">
+          <div className="card-title">Om CeriX Marketing Engine</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--slate)' }}>
+            <p style={{ marginBottom: 12 }}>CeriX Marketing Engine er jeres AI-drevne indholdsmotor. Den holder jer opdateret på branchen og hjælper med at producere professionelt marketingindhold hurtigt og on-brand.</p>
+            <p style={{ marginBottom: 12 }}>Motoren bruger jeres <strong>Brand Guide</strong>, <strong>Knowledge Base</strong> og <strong>billedarkiv</strong> som fundament — så alt indhold afspejler præcis hvem Cerix er og hvad I tilbyder.</p>
+            <p>Fra nyhed til færdigt nyhedsbrev og Meta-annonce på under 2 minutter.</p>
+          </div>
+          <div className="divider" />
+          <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
+            {['Research Agent', 'Copywriter Agent', 'Visual Agent', 'QA Agent'].map(a => (
+              <span key={a} style={{ background: 'rgba(201,168,92,.1)', color: 'var(--gold)', border: '1px solid rgba(201,168,92,.3)', padding: '3px 10px', fontSize: 11, fontWeight: 600, borderRadius: 2 }}>{a}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── NEWS FEED ──
+function NewsPage() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filter, setFilter] = useState('all');
+  const [generating, setGenerating] = useState(null);
+  const [toast, setToast] = useState(null);
+  const cacheKey = 'cerix_news_' + new Date().toISOString().split('T')[0];
+
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+
+  useEffect(() => {
+    const cached = localStorage.getItem(cacheKey);
+    if (cached) { try { setItems(JSON.parse(cached)); return; } catch {} }
+  }, []);
+
+  const fetchNews = async () => {
+    setLoading(true);
+    const res = await api.post('/api/news/fetch', {});
+    setLoading(false);
+    if (Array.isArray(res)) { setItems(res); localStorage.setItem(cacheKey, JSON.stringify(res)); }
+    else showToast(res.error || 'Fejl', 'error');
+  };
+
+  const generateContent = async (item) => {
+    setGenerating(item.title);
+    const res = await api.post('/api/content/generate', { newsItem: item });
+    setGenerating(null);
+    if (res.error) showToast(res.error, 'error');
+    else showToast('Indhold genereret! Se under "Indhold".');
+  };
+
+  const cats = ['all', 'global', 'denmark', 'regulatory', 'social'];
+  const catLabel = { all: 'Alle', global: '🌍 Globalt', denmark: '🇩🇰 Danmark', regulatory: '⚖️ Regulatorisk', social: '💬 Socialt' };
+  const filtered = filter === 'all' ? items : items.filter(i => i.category === filter);
+
+  return (
+    <div>
+      {toast && <div className={`alert alert-${toast.type}`} style={{ marginBottom: 16 }}>{toast.msg}</div>}
+      <div className="row-between" style={{ marginBottom: 16 }}>
+        <div className="pills" style={{ margin: 0 }}>
+          {cats.map(c => (
+            <div key={c} className={`pill${filter === c ? ' active' : ''}`} onClick={() => setFilter(c)}>
+              {catLabel[c]} {c !== 'all' && <span style={{ opacity: .6 }}>({items.filter(i => c === 'all' || i.category === c).length})</span>}
+            </div>
+          ))}
+        </div>
+        <button className="btn btn-primary" onClick={fetchNews} disabled={loading}>
+          {loading ? <span className="spinner" /> : <><Icon n="refresh" /> Hent nyheder</>}
+        </button>
+      </div>
+
+      {items.length === 0 && !loading && (
+        <div className="loading-center">
+          <span style={{ fontSize: 32, opacity: .3 }}>◎</span>
+          <p>Ingen nyheder endnu — tryk "Hent nyheder" for at starte</p>
+        </div>
+      )}
+      {loading && <div className="loading-center"><div className="spinner spinner-lg" /><p>Søger efter dagens nyheder…</p><span className="text-muted">Tager 20–40 sekunder</span></div>}
+
+      {!loading && filtered.map((item, i) => (
+        <div key={i} className="news-item" style={{ animation: `fadeSlide .3s ease ${i * 20}ms both` }}>
+          <div className={`news-stripe stripe-${item.category}`} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="row" style={{ marginBottom: 5, gap: 8, flexWrap: 'wrap' }}>
+              <span className={`badge badge-${item.category}`}>{catLabel[item.category]}</span>
+              <span className="text-muted font-mono">{item.source}</span>
+            </div>
+            <div className="news-title">{item.title}</div>
+            <div className="news-summary">{item.summary}</div>
+            <div className="news-meta">
+              {(item.tags || []).slice(0, 3).map(t => <span key={t} style={{ background: 'var(--cream)', padding: '1px 7px', fontSize: 10 }}>{t}</span>)}
+              {item.url && <a href={item.url} target="_blank" rel="noopener" style={{ color: 'var(--gold)', fontWeight: 600, fontSize: 11 }}>Læs mere →</a>}
+            </div>
+          </div>
+          <button
+            className="btn btn-gold btn-sm"
+            style={{ flexShrink: 0, whiteSpace: 'nowrap' }}
+            onClick={() => generateContent(item)}
+            disabled={generating === item.title}
+          >
+            {generating === item.title ? <span className="spinner" /> : <><Icon n="sparkle" /> Skab indhold</>}
+          </button>
+        </div>
+      ))}
+      <style>{`@keyframes fadeSlide{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}`}</style>
+    </div>
+  );
+}
+
+// ── CONTENT ──
+function ContentPage() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState('all');
+  const [selected, setSelected] = useState(null);
+
+  const load = () => api.get('/api/content').then(d => { if (Array.isArray(d)) setItems(d); setLoading(false); });
+  useEffect(() => { load(); }, []);
+
+  const updateStatus = async (id, status) => {
+    await api.put(`/api/content/${id}/status`, { status });
+    load();
+  };
+  const del = async (id) => { if (confirm('Slet dette indhold?')) { await api.del(`/api/content/${id}`); load(); } };
+
+  const statuses = ['all', 'draft', 'approved', 'published'];
+  const filtered = filter === 'all' ? items : items.filter(i => i.status === filter);
+
+  if (selected) return <ContentDetail item={selected} onBack={() => { setSelected(null); load(); }} onStatusChange={updateStatus} />;
+
+  return (
+    <div>
+      <div className="row-between" style={{ marginBottom: 16 }}>
+        <div className="pills" style={{ margin: 0 }}>
+          {statuses.map(s => (
+            <div key={s} className={`pill${filter === s ? ' active' : ''}`} onClick={() => setFilter(s)}>
+              {s === 'all' ? 'Alle' : s.charAt(0).toUpperCase() + s.slice(1)} ({s === 'all' ? items.length : items.filter(i => i.status === s).length})
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {loading && <div className="loading-center"><div className="spinner spinner-lg" /></div>}
+      {!loading && filtered.length === 0 && (
+        <div className="loading-center">
+          <span style={{ fontSize: 32, opacity: .3 }}>◆</span>
+          <p>Ingen indhold endnu — gå til Branche Feed og tryk "Skab indhold"</p>
+        </div>
+      )}
+
+      {filtered.map(item => (
+        <div key={item.id} className="content-card">
+          <div className="content-card-header">
+            <div style={{ flex: 1 }}>
+              <div className="row" style={{ marginBottom: 6, gap: 8 }}>
+                <span className={`badge badge-${item.status}`}>{item.status}</span>
+                <span className={`badge badge-${item.newsItem?.category}`}>{item.newsItem?.category}</span>
+                <span className="text-muted font-mono">{new Date(item.createdAt).toLocaleDateString('da-DK')}</span>
+              </div>
+              <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--navy)', marginBottom: 3 }}>{item.newsItem?.title}</div>
+              <div className="text-muted">Vinkel: {item.generated?.angle}</div>
+              <div className="relevance-bar" style={{ width: 120 }}>
+                <div className="relevance-fill" style={{ width: `${(item.generated?.relevanceScore || 0) * 10}%` }} />
+              </div>
+              <span className="text-muted" style={{ fontSize: 10 }}>Relevans {item.generated?.relevanceScore}/10</span>
+            </div>
+            <div className="row" style={{ gap: 8, flexShrink: 0 }}>
+              <button className="btn btn-outline btn-sm" onClick={() => setSelected(item)}>Vis indhold</button>
+              {item.status === 'draft' && <button className="btn btn-gold btn-sm" onClick={() => updateStatus(item.id, 'approved')}>Godkend</button>}
+              {item.status === 'approved' && <button className="btn btn-primary btn-sm" onClick={() => updateStatus(item.id, 'published')}>Publicér</button>}
+              <button className="btn-ghost" onClick={() => del(item.id)}><Icon n="trash" /></button>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {item.generated?.newsletter && <span style={{ background: 'var(--cream)', padding: '3px 10px', fontSize: 11, color: 'var(--slate)' }}>✉ Nyhedsbrev</span>}
+            {item.generated?.meta_ad && <span style={{ background: 'var(--cream)', padding: '3px 10px', fontSize: 11, color: 'var(--slate)' }}>▤ Meta Ads</span>}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ContentDetail({ item, onBack, onStatusChange }) {
+  const [tab, setTab] = useState('newsletter');
+  const g = item.generated || {};
+
+  const copy = (text) => navigator.clipboard.writeText(text).then(() => alert('Kopieret!'));
+
+  return (
+    <div>
+      <div className="row-between" style={{ marginBottom: 20 }}>
+        <button className="btn btn-outline btn-sm" onClick={onBack}><Icon n="back" /> Tilbage</button>
+        <div className="row" style={{ gap: 8 }}>
+          {item.status === 'draft' && <button className="btn btn-gold btn-sm" onClick={() => { onStatusChange(item.id, 'approved'); onBack(); }}>Godkend</button>}
+          {item.status === 'approved' && <button className="btn btn-primary btn-sm" onClick={() => { onStatusChange(item.id, 'published'); onBack(); }}>Publicér</button>}
+        </div>
+      </div>
+
+      <div className="card" style={{ marginBottom: 16 }}>
+        <div className="row" style={{ gap: 10, marginBottom: 10 }}>
+          <span className={`badge badge-${item.status}`}>{item.status}</span>
+          <span className={`badge badge-${item.newsItem?.category}`}>{item.newsItem?.category}</span>
+        </div>
+        <div style={{ fontFamily: 'Playfair Display, serif', fontSize: 18, fontWeight: 700, color: 'var(--navy)', marginBottom: 6 }}>{item.newsItem?.title}</div>
+        <div className="text-muted" style={{ marginBottom: 10 }}>{item.newsItem?.summary}</div>
+        <div className="row" style={{ gap: 12 }}>
+          <div style={{ background: 'rgba(201,168,92,.1)', padding: '6px 12px', borderRadius: 4, fontSize: 12 }}>
+            <span style={{ color: 'var(--muted)', marginRight: 6 }}>Vinkel:</span>
+            <span style={{ color: 'var(--navy)', fontWeight: 500 }}>{g.angle}</span>
+          </div>
+          <div style={{ background: 'rgba(61,122,106,.1)', padding: '6px 12px', borderRadius: 4, fontSize: 12 }}>
+            <span style={{ color: 'var(--muted)', marginRight: 6 }}>Relevans:</span>
+            <span style={{ color: 'var(--sage)', fontWeight: 600 }}>{g.relevanceScore}/10</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="row-between" style={{ marginBottom: 0 }}>
+        <div className="tabs" style={{ marginBottom: 0 }}>
+          <div className={`tab${tab === 'newsletter' ? ' active' : ''}`} onClick={() => setTab('newsletter')}>✉ Nyhedsbrev</div>
+          <div className={`tab${tab === 'meta' ? ' active' : ''}`} onClick={() => setTab('meta')}>▤ Meta Ads</div>
+          <div className={`tab${tab === 'image' ? ' active' : ''}`} onClick={() => setTab('image')}>◈ Billedprompt</div>
+        </div>
+        <div className="row" style={{ gap: 6 }}>
+          {g.newsletter && <a href={`/api/export/newsletter/${item.id}?download=true`} target="_blank" className="btn btn-outline btn-sm"><Icon n="download" /> HTML Email</a>}
+          {g.meta_ad && (
+            <div style={{ position: 'relative' }}>
+              <button className="btn btn-outline btn-sm" onClick={() => {
+                const el = document.getElementById('export-menu-' + item.id);
+                if (el) el.style.display = el.style.display === 'block' ? 'none' : 'block';
+              }}><Icon n="export" /> Meta Preview</button>
+              <div id={'export-menu-' + item.id} style={{ display: 'none', position: 'absolute', right: 0, top: '100%', background: '#fff', border: '1px solid var(--border)', borderRadius: 4, padding: 4, zIndex: 10, minWidth: 140 }}>
+                {['feed', 'story', 'banner'].map(f => (
+                  <a key={f} href={`/api/export/meta-ad/${item.id}/preview/${f}`} target="_blank" style={{ display: 'block', padding: '6px 10px', fontSize: 12, color: 'var(--navy)', textDecoration: 'none', fontWeight: 500 }}
+                    onMouseOver={e => e.target.style.background = 'var(--cream)'}
+                    onMouseOut={e => e.target.style.background = 'transparent'}>
+                    {f === 'feed' ? '1:1 Feed' : f === 'story' ? '9:16 Story' : '1.91:1 Banner'}
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div style={{ marginBottom: 20 }} />
+
+      {tab === 'newsletter' && g.newsletter && (
+        <div>
+          <div className="grid-2" style={{ marginBottom: 14 }}>
+            <div className="content-section">
+              <div className="content-section-label">Emnefelt</div>
+              <div className="row-between">
+                <div className="content-section-text" style={{ fontWeight: 600 }}>{g.newsletter.subject}</div>
+                <button className="btn-ghost" onClick={() => copy(g.newsletter.subject)}><Icon n="copy" /></button>
+              </div>
+            </div>
+            <div className="content-section">
+              <div className="content-section-label">Preheader</div>
+              <div className="row-between">
+                <div className="content-section-text">{g.newsletter.preheader}</div>
+                <button className="btn-ghost" onClick={() => copy(g.newsletter.preheader)}><Icon n="copy" /></button>
+              </div>
+            </div>
+          </div>
+          <div className="content-section" style={{ marginBottom: 14 }}>
+            <div className="content-section-label">Overskrift</div>
+            <div className="row-between">
+              <div className="content-section-text" style={{ fontSize: 16, fontFamily: 'Playfair Display, serif', fontWeight: 700 }}>{g.newsletter.headline}</div>
+              <button className="btn-ghost" onClick={() => copy(g.newsletter.headline)}><Icon n="copy" /></button>
+            </div>
+          </div>
+          <div className="content-section" style={{ marginBottom: 14 }}>
+            <div className="row-between" style={{ marginBottom: 6 }}>
+              <div className="content-section-label" style={{ margin: 0 }}>Brødtekst</div>
+              <button className="btn-ghost" onClick={() => copy(g.newsletter.body)}><Icon n="copy" /></button>
+            </div>
+            <div className="content-section-text">{g.newsletter.body}</div>
+          </div>
+          <div className="content-section">
+            <div className="content-section-label">Call to Action</div>
+            <div className="row" style={{ gap: 10 }}>
+              <div style={{ background: 'var(--navy)', color: '#fff', padding: '8px 20px', fontWeight: 600, fontSize: 13, borderRadius: 4 }}>{g.newsletter.cta}</div>
+              <span className="text-muted">→ {g.newsletter.ctaUrl}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tab === 'meta' && g.meta_ad && (
+        <div>
+          <div className="content-section" style={{ marginBottom: 14 }}>
+            <div className="content-section-label">Primær tekst</div>
+            <div className="row-between">
+              <div className="content-section-text">{g.meta_ad.primary}</div>
+              <button className="btn-ghost" onClick={() => copy(g.meta_ad.primary)}><Icon n="copy" /></button>
+            </div>
+          </div>
+          <div className="grid-2" style={{ marginBottom: 14 }}>
+            <div className="content-section">
+              <div className="content-section-label">Overskrift (40 tegn)</div>
+              <div className="row-between">
+                <div className="content-section-text" style={{ fontWeight: 600 }}>{g.meta_ad.headline}</div>
+                <button className="btn-ghost" onClick={() => copy(g.meta_ad.headline)}><Icon n="copy" /></button>
+              </div>
+            </div>
+            <div className="content-section">
+              <div className="content-section-label">Beskrivelse</div>
+              <div className="row-between">
+                <div className="content-section-text">{g.meta_ad.description}</div>
+                <button className="btn-ghost" onClick={() => copy(g.meta_ad.description)}><Icon n="copy" /></button>
+              </div>
+            </div>
+          </div>
+          <div className="section-title">Formatsæt</div>
+          <div className="col">
+            {(g.meta_ad.variants || []).map((v, i) => (
+              <div key={i} className="content-section">
+                <div className="row-between">
+                  <div className="content-section-label" style={{ margin: 0 }}>{v.format}</div>
+                  <button className="btn-ghost" onClick={() => copy(v.copy)}><Icon n="copy" /></button>
+                </div>
+                <div className="content-section-text mt-8">{v.copy}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === 'image' && (
+        <div className="content-section">
+          <div className="content-section-label">AI Billedprompt</div>
+          <div className="row-between" style={{ alignItems: 'flex-start' }}>
+            <div className="content-section-text" style={{ flex: 1 }}>{g.imagePrompt}</div>
+            <button className="btn-ghost" onClick={() => copy(g.imagePrompt)}><Icon n="copy" /></button>
+          </div>
+          <div className="alert alert-info mt-12">Brug denne prompt i Midjourney, Flux eller DALL-E. Vælg bagefter billede fra dit arkiv eller tilføj AI-genereret billede til billedarkivet.</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── BRAND GUIDE ──
+function BrandPage({ user }) {
+  const [brand, setBrand] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [toast, setToast] = useState(null);
+  const canEdit = user.role !== 'viewer';
+
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+
+  useEffect(() => { api.get('/api/brand').then(d => { if (!d.error) setBrand(d); }); }, []);
+
+  const save = async () => {
+    setSaving(true);
+    const res = await api.put('/api/brand', brand);
+    setSaving(false);
+    if (res.error) showToast(res.error, 'error');
+    else { setBrand(res); showToast('Brand guide gemt'); }
+  };
+
+  const setColor = (key, val) => setBrand(p => ({ ...p, colors: { ...p.colors, [key]: val } }));
+  const setDoItem = (i, val) => setBrand(p => { const d = [...(p.doList || [])]; d[i] = val; return { ...p, doList: d }; });
+  const setDontItem = (i, val) => setBrand(p => { const d = [...(p.dontList || [])]; d[i] = val; return { ...p, dontList: d }; });
+  const addDo = () => setBrand(p => ({ ...p, doList: [...(p.doList || []), ''] }));
+  const addDont = () => setBrand(p => ({ ...p, dontList: [...(p.dontList || []), ''] }));
+
+  if (!brand) return <div className="loading-center"><div className="spinner spinner-lg" /></div>;
+
+  return (
+    <div>
+      {toast && <div className={`alert alert-${toast.type}`}>{toast.msg}</div>}
+      <div className="grid-2" style={{ gap: 20 }}>
+
+        {/* Colors */}
+        <div className="card">
+          <div className="card-title">Farvepalette</div>
+          {[['primary', 'Primær'], ['secondary', 'Sekundær (Guld)'], ['accent', 'Accent'], ['text', 'Tekst'], ['background', 'Baggrund']].map(([key, label]) => (
+            <div key={key} className="row-between" style={{ marginBottom: 12 }}>
+              <div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--navy)' }}>{label}</div>
+                <div className="font-mono" style={{ color: 'var(--muted)', marginTop: 2 }}>{brand.colors?.[key]}</div>
+              </div>
+              <div className="swatch" style={{ background: brand.colors?.[key] }}>
+                {canEdit && <input type="color" value={brand.colors?.[key] || '#000000'} onChange={e => setColor(key, e.target.value)} />}
+              </div>
+            </div>
+          ))}
+          <div className="divider" />
+          <div className="section-title">Forhåndsvisning</div>
+          <div style={{ padding: '14px', borderRadius: 4, background: brand.colors?.background, border: '1px solid var(--border)' }}>
+            <div style={{ fontFamily: brand.fonts?.heading + ', serif', fontSize: 18, fontWeight: 700, color: brand.colors?.primary, marginBottom: 6 }}>Eksempel overskrift</div>
+            <div style={{ fontFamily: brand.fonts?.body + ', sans-serif', fontSize: 13, color: brand.colors?.text, lineHeight: 1.6 }}>Brødtekst i jeres brandfarver og typografi.</div>
+            <div style={{ marginTop: 10, display: 'inline-block', background: brand.colors?.secondary, color: brand.colors?.primary, padding: '6px 16px', fontWeight: 600, fontSize: 12 }}>{brand.tagline || 'Jeres tagline her'}</div>
+          </div>
+        </div>
+
+        {/* Fonts & Tone */}
+        <div className="col">
+          <div className="card">
+            <div className="card-title">Typografi</div>
+            <div className="grid-2 gap-12">
+              {[['heading', 'Overskrift font'], ['body', 'Brødtekst font'], ['mono', 'Mono font']].map(([key, label]) => (
+                <div key={key} className="field" style={{ margin: 0 }}>
+                  <label className="label">{label}</label>
+                  <input className="input" value={brand.fonts?.[key] || ''} disabled={!canEdit}
+                    onChange={e => setBrand(p => ({ ...p, fonts: { ...p.fonts, [key]: e.target.value } }))} />
+                </div>
+              ))}
+            </div>
+            <div className="brand-preview-bar mt-12">
+              {['heading', 'body'].map(k => (
+                <div key={k} className="font-preview" style={{ fontFamily: brand.fonts?.[k] + ', sans-serif' }}>
+                  <div style={{ fontSize: k === 'heading' ? 18 : 13, fontWeight: k === 'heading' ? 700 : 400 }}>Aa Bb Cc</div>
+                  <div className="font-preview-name">{brand.fonts?.[k]}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <div className="card-title">Tagline & Tone</div>
+            <div className="field">
+              <label className="label">Tagline</label>
+              <input className="input" value={brand.tagline || ''} disabled={!canEdit}
+                onChange={e => setBrand(p => ({ ...p, tagline: e.target.value }))} />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label className="label">Tone of voice</label>
+              <textarea className="input textarea" value={brand.tone || ''} disabled={!canEdit}
+                onChange={e => setBrand(p => ({ ...p, tone: e.target.value }))} />
+            </div>
+          </div>
+        </div>
+
+        {/* Do/Don't */}
+        <div className="card">
+          <div className="card-title">Gør altid</div>
+          {(brand.doList || []).map((item, i) => (
+            <div key={i} className="row" style={{ marginBottom: 8, gap: 8 }}>
+              <span style={{ color: 'var(--sage)', fontWeight: 700, flexShrink: 0 }}>✓</span>
+              <input className="input flex-1" value={item} disabled={!canEdit}
+                onChange={e => setDoItem(i, e.target.value)} />
+            </div>
+          ))}
+          {canEdit && <button className="btn btn-outline btn-sm mt-8" onClick={addDo}><Icon n="plus" /> Tilføj</button>}
+        </div>
+
+        <div className="card">
+          <div className="card-title">Undgå altid</div>
+          {(brand.dontList || []).map((item, i) => (
+            <div key={i} className="row" style={{ marginBottom: 8, gap: 8 }}>
+              <span style={{ color: 'var(--coral)', fontWeight: 700, flexShrink: 0 }}>✕</span>
+              <input className="input flex-1" value={item} disabled={!canEdit}
+                onChange={e => setDontItem(i, e.target.value)} />
+            </div>
+          ))}
+          {canEdit && <button className="btn btn-outline btn-sm mt-8" onClick={addDont}><Icon n="plus" /> Tilføj</button>}
+        </div>
+      </div>
+
+      {canEdit && (
+        <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
+          <button className="btn btn-gold" onClick={save} disabled={saving}>
+            {saving ? <span className="spinner" /> : <><Icon n="check" /> Gem Brand Guide</>}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── KNOWLEDGE BASE ──
+function KnowledgePage({ user }) {
+  const [kb, setKb] = useState(null);
+  const [tab, setTab] = useState('treatments');
+  const [crawling, setCrawling] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [toast, setToast] = useState(null);
+  const canEdit = user.role !== 'viewer';
+
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const load = () => api.get('/api/knowledge').then(d => { if (!d.error) setKb(d); });
+  useEffect(() => { load(); }, []);
+
+  const crawl = async () => {
+    if (!confirm('Crawler cerix.dk og opdaterer Knowledge Base. Fortsæt?')) return;
+    setCrawling(true);
+    const res = await api.post('/api/knowledge/crawl', {});
+    setCrawling(false);
+    if (res.error) showToast(res.error, 'error');
+    else { showToast(`Fandt ${res.treatments} behandlinger og ${res.faqs} FAQs`); load(); }
+  };
+
+  const deleteTreatment = async (id) => {
+    await api.del(`/api/knowledge/treatment/${id}`);
+    load();
+  };
+
+  if (!kb) return <div className="loading-center"><div className="spinner spinner-lg" /></div>;
+
+  return (
+    <div>
+      {toast && <div className={`alert alert-${toast.type}`}>{toast.msg}</div>}
+      <div className="row-between" style={{ marginBottom: 16 }}>
+        <div className="row" style={{ gap: 10 }}>
+          {kb.lastCrawled && <span className="text-muted font-mono">Sidst crawlet: {new Date(kb.lastCrawled).toLocaleDateString('da-DK')}</span>}
+        </div>
+        {canEdit && (
+          <div className="row" style={{ gap: 10 }}>
+            <button className="btn btn-outline" onClick={() => setShowAdd(true)}><Icon n="plus" /> Tilføj behandling</button>
+            <button className="btn btn-primary" onClick={crawl} disabled={crawling}>
+              {crawling ? <><span className="spinner" /> Crawler cerix.dk…</> : <><Icon n="refresh" /> Crawler cerix.dk</>}
+            </button>
+          </div>
+        )}
+      </div>
+
+      <div className="tabs">
+        <div className={`tab${tab === 'treatments' ? ' active' : ''}`} onClick={() => setTab('treatments')}>
+          Behandlinger ({(kb.treatments || []).length})
+        </div>
+        <div className={`tab${tab === 'faqs' ? ' active' : ''}`} onClick={() => setTab('faqs')}>
+          FAQs ({(kb.faqs || []).length})
+        </div>
+        <div className={`tab${tab === 'about' ? ' active' : ''}`} onClick={() => setTab('about')}>
+          Om Cerix
+        </div>
+      </div>
+
+      {tab === 'treatments' && (
+        <div className="col">
+          {(kb.treatments || []).length === 0 && (
+            <div className="loading-center">
+              <span style={{ fontSize: 28, opacity: .3 }}>◉</span>
+              <p>Ingen behandlinger endnu — klik "Crawler cerix.dk" for at starte</p>
+            </div>
+          )}
+          {(kb.treatments || []).map(t => (
+            <div key={t.id} className="treatment-card">
+              <div className="treatment-body">
+                <div className="treatment-cat">{t.category}</div>
+                <div className="treatment-name">{t.name}</div>
+                <div className="treatment-desc">{t.description}</div>
+                {t.treats && <div className="text-muted mt-4">Behandler: {t.treats}</div>}
+                {t.priceNote && <div className="text-muted">Pris: {t.priceNote}</div>}
+              </div>
+              <div className="row" style={{ flexShrink: 0, alignItems: 'flex-start', gap: 6 }}>
+                {t.source === 'crawler' && <span className="badge" style={{ background: 'var(--cream)', color: 'var(--muted)' }}>Auto</span>}
+                {canEdit && <button className="btn-ghost" onClick={() => deleteTreatment(t.id)}><Icon n="trash" /></button>}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'faqs' && (
+        <div className="col">
+          {(kb.faqs || []).map((f, i) => (
+            <div key={f.id} className="card card-sm">
+              <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--navy)', marginBottom: 6 }}>Q: {f.question}</div>
+              <div style={{ fontSize: 13, color: 'var(--slate)', lineHeight: 1.55 }}>A: {f.answer}</div>
+            </div>
+          ))}
+          {(kb.faqs || []).length === 0 && <div className="loading-center"><p>Ingen FAQs endnu</p></div>}
+        </div>
+      )}
+
+      {tab === 'about' && (
+        <div className="card">
+          <div className="card-title">Om Cerix</div>
+          <textarea className="input textarea" style={{ minHeight: 200 }} value={kb.about || ''} disabled={!canEdit}
+            onChange={e => setKb(p => ({ ...p, about: e.target.value }))} placeholder="Beskrivelse af klinikken..." />
+          {canEdit && (
+            <button className="btn btn-gold mt-12" onClick={async () => {
+              await api.put('/api/knowledge', { about: kb.about });
+              showToast('Gemt');
+            }}><Icon n="check" /> Gem</button>
+          )}
+        </div>
+      )}
+
+      {showAdd && <AddTreatmentModal onClose={() => setShowAdd(false)} onSave={async (data) => { await api.post('/api/knowledge/treatment', data); setShowAdd(false); load(); }} />}
+    </div>
+  );
+}
+
+function AddTreatmentModal({ onClose, onSave }) {
+  const [data, setData] = useState({ name: '', category: '', description: '', treats: '', targetAudience: '', priceNote: '' });
+  const set = (k, v) => setData(p => ({ ...p, [k]: v }));
+  return (
+    <div className="modal-bg">
+      <div className="modal">
+        <div className="modal-title">Tilføj behandling</div>
+        {[['name','Behandlingsnavn'],['category','Kategori (fx Injektion, Laser)'],['description','Beskrivelse'],['treats','Hvad behandler den'],['targetAudience','Målgruppe'],['priceNote','Prisindikation']].map(([k, l]) => (
+          <div key={k} className="field">
+            <label className="label">{l}</label>
+            {['description','treats','targetAudience'].includes(k)
+              ? <textarea className="input textarea" value={data[k]} onChange={e => set(k, e.target.value)} />
+              : <input className="input" value={data[k]} onChange={e => set(k, e.target.value)} />}
+          </div>
+        ))}
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onClose}>Annuller</button>
+          <button className="btn btn-gold" onClick={() => onSave(data)} disabled={!data.name}>Gem behandling</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── IMAGES ──
+function ImagesPage({ user }) {
+  const [images, setImages] = useState([]);
+  const [filter, setFilter] = useState('all');
+  const [uploading, setUploading] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef();
+  const canEdit = user.role !== 'viewer';
+
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const load = () => api.get('/api/images').then(d => { if (Array.isArray(d)) setImages(d); });
+  useEffect(() => { load(); }, []);
+
+  const upload = async (files, isBrandDna = false) => {
+    setUploading(true);
+    const fd = new FormData();
+    [...files].forEach(f => fd.append('images', f));
+    fd.append('isBrandDna', isBrandDna);
+    fd.append('category', isBrandDna ? 'brand-dna' : 'general');
+    const res = await api.upload('/api/images', fd);
+    setUploading(false);
+    if (res.error) showToast(res.error, 'error');
+    else { showToast(`${Array.isArray(res) ? res.length : 1} billede(r) uploadet`); load(); }
+  };
+
+  const del = async (id) => {
+    if (!confirm('Slet billede?')) return;
+    await api.del(`/api/images/${id}`);
+    load();
+  };
+
+  const filtered = filter === 'all' ? images : filter === 'brand-dna' ? images.filter(i => i.isBrandDna) : images.filter(i => !i.isBrandDna);
+
+  return (
+    <div>
+      {toast && <div className={`alert alert-${toast.type}`}>{toast.msg}</div>}
+      <div className="row-between" style={{ marginBottom: 16 }}>
+        <div className="pills" style={{ margin: 0 }}>
+          {[['all', 'Alle'], ['brand-dna', '★ Brand DNA'], ['general', 'Generelt']].map(([k, l]) => (
+            <div key={k} className={`pill${filter === k ? ' active' : ''}`} onClick={() => setFilter(k)}>{l}</div>
+          ))}
+        </div>
+        {canEdit && (
+          <div className="row" style={{ gap: 10 }}>
+            <button className="btn btn-outline" onClick={() => { fileRef.current.dataset.dna = ''; fileRef.current.click(); }}>
+              <Icon n="upload" /> Upload billeder
+            </button>
+            <button className="btn btn-gold" onClick={() => { fileRef.current.dataset.dna = 'true'; fileRef.current.click(); }}>
+              <Icon n="star" /> Upload Brand DNA
+            </button>
+            <input ref={fileRef} type="file" multiple accept="image/*" style={{ display: 'none' }}
+              onChange={e => upload(e.target.files, e.target.dataset.dna === 'true')} />
+          </div>
+        )}
+      </div>
+
+      {canEdit && images.length === 0 && (
+        <div
+          className={`upload-zone${dragOver ? ' drag' : ''}`}
+          style={{ marginBottom: 20 }}
+          onDragOver={e => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={e => { e.preventDefault(); setDragOver(false); upload(e.dataTransfer.files); }}
+          onClick={() => fileRef.current.click()}
+        >
+          <div className="upload-zone-icon">▣</div>
+          <div className="upload-zone-text">Træk billeder hertil eller klik for at vælge</div>
+          <div className="upload-zone-sub">PNG, JPG, WEBP · Max 15MB pr. billede · Op til 20 ad gangen</div>
+        </div>
+      )}
+
+      {uploading && <div className="loading-center"><div className="spinner spinner-lg" /><p>Uploader…</p></div>}
+
+      {!uploading && filtered.length === 0 && images.length > 0 && (
+        <div className="loading-center"><p>Ingen billeder i denne kategori</p></div>
+      )}
+
+      <div className="img-grid">
+        {filtered.map(img => (
+          <div key={img.id} className="img-card">
+            {img.isBrandDna && <div className="img-badge">DNA</div>}
+            <img src={img.url} alt={img.originalName} />
+            <div className="img-card-footer">
+              <div className="img-card-name">{img.originalName}</div>
+              <div className="row-between mt-4">
+                <span className="text-muted" style={{ fontSize: 10 }}>{(img.size / 1024).toFixed(0)} KB</span>
+                {canEdit && <button className="btn-ghost" style={{ padding: '2px 6px', fontSize: 10 }} onClick={() => del(img.id)}>✕</button>}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {filtered.length === 0 && images.length === 0 && !uploading && (
+        <div className="card" style={{ marginTop: 12 }}>
+          <div className="card-title">Om billedarkivet</div>
+          <div style={{ fontSize: 13, lineHeight: 1.7, color: 'var(--slate)' }}>
+            <p style={{ marginBottom: 10 }}><strong>Brand DNA billeder</strong> bruges som style reference til AI-billedgenerering — jo flere du uploader, jo mere "on-brand" bliver de genererede billeder.</p>
+            <p>Upload billeder af: klinik-interiør, behandlingssituationer, modeller i jeres stil, produktbilleder og before/after (med tilladelse).</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── USERS ──
+function UsersPage({ user }) {
+  const [users, setUsers] = useState([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [toast, setToast] = useState(null);
+
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const load = () => api.get('/api/users').then(d => { if (Array.isArray(d)) setUsers(d); });
+  useEffect(() => { load(); }, []);
+
+  const del = async (id) => {
+    if (id === user.id) return showToast('Du kan ikke slette dig selv', 'error');
+    if (!confirm('Slet bruger?')) return;
+    await api.del(`/api/users/${id}`);
+    showToast('Bruger slettet'); load();
+  };
+
+  return (
+    <div>
+      {toast && <div className={`alert alert-${toast.type}`}>{toast.msg}</div>}
+      <div className="row-between" style={{ marginBottom: 16 }}>
+        <div>
+          <div style={{ fontSize: 13, color: 'var(--muted)' }}>{users.length} bruger{users.length !== 1 ? 'e' : ''}</div>
+        </div>
+        <button className="btn btn-primary" onClick={() => setShowAdd(true)}><Icon n="plus" /> Invitér bruger</button>
+      </div>
+
+      <div className="card" style={{ padding: 0 }}>
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Navn</th><th>Email</th><th>Rolle</th><th>Oprettet</th><th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {users.map(u => (
+                <tr key={u.id}>
+                  <td>
+                    <div className="row" style={{ gap: 10 }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--navy)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff', flexShrink: 0 }}>
+                        {(u.name || 'U')[0].toUpperCase()}
+                      </div>
+                      <span style={{ fontWeight: 500 }}>{u.name}</span>
+                      {u.id === user.id && <span className="badge" style={{ background: 'var(--cream)', color: 'var(--muted)' }}>dig</span>}
+                    </div>
+                  </td>
+                  <td className="font-mono">{u.email}</td>
+                  <td><span className={`badge badge-${u.role}`}>{u.role}</span></td>
+                  <td className="text-muted">{new Date(u.createdAt).toLocaleDateString('da-DK')}</td>
+                  <td>
+                    {u.id !== user.id && (
+                      <button className="btn-ghost" onClick={() => del(u.id)}><Icon n="trash" /></button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div className="card mt-16">
+        <div className="card-title">Roller forklaret</div>
+        <div className="grid-3" style={{ gap: 14 }}>
+          {[
+            ['admin', 'var(--coral)', 'Fuld adgang. Kan ændre brand guide, crawle KB, administrere brugere og publicere indhold.'],
+            ['editor', 'var(--sage)', 'Kan generere og godkende indhold, uploade billeder og redigere KB. Kan ikke ændre brugere.'],
+            ['viewer', 'var(--muted)', 'Kan se alt indhold og feed, men kan ikke ændre eller generere noget.'],
+          ].map(([role, color, desc]) => (
+            <div key={role} className="card card-sm" style={{ borderTop: `3px solid ${color}` }}>
+              <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 6, textTransform: 'capitalize', color }}>{role}</div>
+              <div className="text-muted">{desc}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {showAdd && <AddUserModal onClose={() => setShowAdd(false)} onSave={async (data) => {
+        const res = await api.post('/api/users', data);
+        if (res.error) alert(res.error);
+        else { setShowAdd(false); showToast('Bruger oprettet'); load(); }
+      }} />}
+    </div>
+  );
+}
+
+function AddUserModal({ onClose, onSave }) {
+  const [data, setData] = useState({ name: '', email: '', password: '', role: 'editor' });
+  const set = (k, v) => setData(p => ({ ...p, [k]: v }));
+  return (
+    <div className="modal-bg">
+      <div className="modal">
+        <div className="modal-title">Invitér bruger</div>
+        <div className="field"><label className="label">Navn</label><input className="input" value={data.name} onChange={e => set('name', e.target.value)} /></div>
+        <div className="field"><label className="label">Email</label><input className="input" type="email" value={data.email} onChange={e => set('email', e.target.value)} /></div>
+        <div className="field"><label className="label">Adgangskode</label><input className="input" type="password" value={data.password} onChange={e => set('password', e.target.value)} /></div>
+        <div className="field">
+          <label className="label">Rolle</label>
+          <select className="input select" value={data.role} onChange={e => set('role', e.target.value)}>
+            <option value="admin">Admin</option>
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        <div className="modal-footer">
+          <button className="btn btn-outline" onClick={onClose}>Annuller</button>
+          <button className="btn btn-primary" onClick={() => onSave(data)} disabled={!data.name || !data.email || !data.password}>Opret bruger</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── COMPETITORS ──
+function CompetitorsPage({ user }) {
+  const [ads, setAds] = useState([]);
+  const [insights, setInsights] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [tab, setTab] = useState('ads');
+  const [toast, setToast] = useState(null);
+  const canEdit = user.role !== 'viewer';
+
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+  const load = () => {
+    api.get('/api/competitors').then(d => { if (Array.isArray(d)) setAds(d); });
+    api.get('/api/competitors/insights/latest').then(d => { if (d?.analysis) setInsights(d); });
+  };
+  useEffect(() => { load(); }, []);
+
+  const fetchAds = async () => {
+    setLoading(true);
+    const res = await api.post('/api/competitors/fetch', {});
+    setLoading(false);
+    if (res.error) showToast(res.error, 'error');
+    else { showToast(`${res.count} annoncer hentet (${res.source})`); load(); }
+  };
+
+  const analyze = async () => {
+    setAnalyzing(true);
+    const res = await api.post('/api/competitors/analyze', {});
+    setAnalyzing(false);
+    if (res.error) showToast(res.error, 'error');
+    else { showToast('Analyse klar!'); setInsights(res.insight); setTab('insights'); }
+  };
+
+  return (
+    <div>
+      {toast && <div className={`alert alert-${toast.type}`}>{toast.msg}</div>}
+      <div className="row-between" style={{ marginBottom: 16 }}>
+        <div className="tabs" style={{ margin: 0, border: 'none' }}>
+          <div className={`tab${tab === 'ads' ? ' active' : ''}`} onClick={() => setTab('ads')}>Annoncer ({ads.length})</div>
+          <div className={`tab${tab === 'insights' ? ' active' : ''}`} onClick={() => setTab('insights')}>Analyse</div>
+        </div>
+        {canEdit && (
+          <div className="row" style={{ gap: 10 }}>
+            <button className="btn btn-outline" onClick={fetchAds} disabled={loading}>
+              {loading ? <span className="spinner" /> : <><Icon n="refresh" /> Hent annoncer</>}
+            </button>
+            <button className="btn btn-gold" onClick={analyze} disabled={analyzing || ads.length === 0}>
+              {analyzing ? <><span className="spinner" /> Analyserer...</> : <><Icon n="sparkle" /> Analysér</>}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {tab === 'ads' && (
+        <div>
+          {ads.length === 0 && !loading && (
+            <div className="loading-center">
+              <span style={{ fontSize: 32, opacity: .3 }}>◬</span>
+              <p>Ingen konkurrentannoncer endnu</p>
+              <p className="text-muted">Tryk "Hent annoncer" for at starte</p>
+            </div>
+          )}
+          {loading && <div className="loading-center"><div className="spinner spinner-lg" /><p>Henter annoncer...</p></div>}
+          <div className="col">
+            {ads.map(ad => (
+              <div key={ad.id} className="card card-sm">
+                <div className="row-between" style={{ marginBottom: 8 }}>
+                  <div className="row" style={{ gap: 8 }}>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: 'var(--navy)' }}>{ad.advertiser}</span>
+                    <span className="badge" style={{ background: 'var(--cream)', color: 'var(--muted)' }}>{ad.platform}</span>
+                  </div>
+                  <span className="text-muted font-mono">{ad.startDate || '-'}</span>
+                </div>
+                <div style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--slate)', marginBottom: 8, padding: '8px 12px', background: 'var(--cream)', borderRadius: 4 }}>
+                  {ad.adText || ad.ad_text}
+                </div>
+                <div className="row" style={{ gap: 8 }}>
+                  <span style={{ fontSize: 11, color: 'var(--muted)' }}>CTA: <strong style={{ color: 'var(--navy)' }}>{ad.cta}</strong></span>
+                  <span style={{ fontSize: 11, background: 'rgba(201,168,92,.1)', padding: '2px 8px', borderRadius: 2, color: 'var(--gold)' }}>{ad.searchTerm || ad.search_term}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tab === 'insights' && (
+        <div>
+          {!insights?.analysis && (
+            <div className="loading-center">
+              <span style={{ fontSize: 32, opacity: .3 }}>◕</span>
+              <p>Ingen analyse endnu</p>
+              <p className="text-muted">Hent annoncer og tryk "Analysér" for at generere indsigter</p>
+            </div>
+          )}
+          {insights?.analysis && (
+            <div>
+              <div className="grid-2" style={{ gap: 16, marginBottom: 16 }}>
+                <div className="card">
+                  <div className="card-title">Identificerede mønstre</div>
+                  {(insights.analysis.patterns || []).map((p, i) => (
+                    <div key={i} style={{ padding: '8px 0', borderBottom: i < insights.analysis.patterns.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <div className="row" style={{ gap: 8, marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--navy)' }}>{p.pattern}</span>
+                        <span className="badge" style={{ background: p.frequency === 'høj' ? '#D4EDDA' : '#F0EBE0', color: p.frequency === 'høj' ? '#1A6535' : '#6A5020' }}>{p.frequency}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="card">
+                  <div className="card-title">Top Hooks</div>
+                  {(insights.analysis.hooks || []).map((h, i) => (
+                    <div key={i} style={{ padding: '8px 0', borderBottom: i < insights.analysis.hooks.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, color: 'var(--navy)', marginBottom: 2 }}>{h.hook}</div>
+                      <div className="text-muted">{h.why}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="card" style={{ marginBottom: 16 }}>
+                <div className="card-title">CeriX Muligheder</div>
+                <div className="grid-2" style={{ gap: 12 }}>
+                  {(insights.analysis.cerixOpportunities || []).map((o, i) => (
+                    <div key={i} className="content-section">
+                      <div className="content-section-label">{o.opportunity}</div>
+                      <div style={{ fontSize: 13, color: 'var(--navy)', fontWeight: 500, marginBottom: 4 }}>Vinkel: {o.suggestedAngle}</div>
+                      <div className="text-muted" style={{ fontStyle: 'italic' }}>"{o.suggestedCopy}"</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="grid-2" style={{ gap: 16 }}>
+                <div className="card">
+                  <div className="card-title">Anbefalinger</div>
+                  {(insights.analysis.recommendations || []).map((r, i) => (
+                    <div key={i} className="row" style={{ gap: 8, marginBottom: 8 }}>
+                      <span style={{ color: 'var(--sage)', fontWeight: 700 }}>✓</span>
+                      <span style={{ fontSize: 13 }}>{r}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="card">
+                  <div className="card-title">CTA Mønstre</div>
+                  {(insights.analysis.ctaPatterns || []).map((c, i) => (
+                    <div key={i} className="row-between" style={{ padding: '6px 0', borderBottom: i < insights.analysis.ctaPatterns.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                      <span style={{ fontWeight: 600, fontSize: 13, color: 'var(--navy)' }}>{c.cta}</span>
+                      <span className="text-muted font-mono">{c.frequency}x</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── VISUAL STUDIO ──
+function VisualPage({ user }) {
+  const [prompts, setPrompts] = useState([]);
+  const [content, setContent] = useState([]);
+  const [selectedContent, setSelectedContent] = useState('');
+  const [format, setFormat] = useState('feed');
+  const [customCtx, setCustomCtx] = useState('');
+  const [generating, setGenerating] = useState(false);
+  const [result, setResult] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [dnaAnalysis, setDnaAnalysis] = useState(null);
+  const [toast, setToast] = useState(null);
+  const canEdit = user.role !== 'viewer';
+
+  const showToast = (msg, type = 'success') => { setToast({ msg, type }); setTimeout(() => setToast(null), 3000); };
+
+  useEffect(() => {
+    api.get('/api/visual/prompts').then(d => { if (Array.isArray(d)) setPrompts(d); });
+    api.get('/api/content').then(d => { if (Array.isArray(d)) setContent(d); });
+  }, []);
+
+  const generatePrompt = async () => {
+    setGenerating(true);
+    const body = { format, customContext: customCtx };
+    if (selectedContent) body.contentId = selectedContent;
+    const res = await api.post('/api/visual/generate-prompt', body);
+    setGenerating(false);
+    if (res.error) showToast(res.error, 'error');
+    else { setResult(res); showToast('Billedprompt genereret!'); }
+  };
+
+  const analyzeDna = async () => {
+    setAnalyzing(true);
+    const res = await api.post('/api/visual/analyze-brand-dna', {});
+    setAnalyzing(false);
+    if (res.error) showToast(res.error, 'error');
+    else { setDnaAnalysis(res); showToast('Brand DNA analyseret!'); }
+  };
+
+  const copy = (text) => navigator.clipboard.writeText(text).then(() => showToast('Kopieret!'));
+
+  return (
+    <div>
+      {toast && <div className={`alert alert-${toast.type}`}>{toast.msg}</div>}
+      <div className="grid-2" style={{ gap: 20, marginBottom: 20 }}>
+        <div className="card">
+          <div className="card-title">Generer billedprompt</div>
+          <div className="field">
+            <label className="label">Baseret på indhold (valgfrit)</label>
+            <select className="input select" value={selectedContent} onChange={e => setSelectedContent(e.target.value)}>
+              <option value="">-- Intet specifikt indhold --</option>
+              {content.map(c => (
+                <option key={c.id} value={c.id}>{c.newsItem?.title} ({c.status})</option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label className="label">Format</label>
+            <div className="pills" style={{ margin: 0 }}>
+              {[['feed', '1:1 Feed'], ['story', '9:16 Story'], ['banner', '1.91:1 Banner']].map(([k, l]) => (
+                <div key={k} className={`pill${format === k ? ' active' : ''}`} onClick={() => setFormat(k)}>{l}</div>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <label className="label">Ekstra kontekst (valgfrit)</label>
+            <textarea className="input textarea" value={customCtx} onChange={e => setCustomCtx(e.target.value)} placeholder="F.eks. 'fokus på Botox-behandling' eller 'forårskampagne'" />
+          </div>
+          {canEdit && (
+            <button className="btn btn-gold w-full" onClick={generatePrompt} disabled={generating}>
+              {generating ? <><span className="spinner" /> Genererer...</> : <><Icon n="sparkle" /> Generer billedprompt</>}
+            </button>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-title">Brand DNA Analyse</div>
+          <p className="text-muted" style={{ marginBottom: 12 }}>Analysér dine uploadede Brand DNA-billeder for at forstå den visuelle stil.</p>
+          {canEdit && (
+            <button className="btn btn-outline w-full" onClick={analyzeDna} disabled={analyzing}>
+              {analyzing ? <><span className="spinner" /> Analyserer...</> : <><Icon n="eye" /> Analysér Brand DNA</>}
+            </button>
+          )}
+          {dnaAnalysis && (
+            <div style={{ marginTop: 16 }}>
+              <div className="content-section">
+                <div className="content-section-label">Overordnet æstetik</div>
+                <div className="content-section-text">{dnaAnalysis.styleAnalysis?.overallAesthetic}</div>
+              </div>
+              <div className="grid-2 mt-8" style={{ gap: 8 }}>
+                <div className="content-section">
+                  <div className="content-section-label">Gør i visuals</div>
+                  {(dnaAnalysis.doInVisuals || []).map((d, i) => (
+                    <div key={i} className="row" style={{ gap: 6, marginBottom: 4 }}>
+                      <span style={{ color: 'var(--sage)' }}>✓</span>
+                      <span className="text-sm">{d}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="content-section">
+                  <div className="content-section-label">Undgå i visuals</div>
+                  {(dnaAnalysis.dontInVisuals || []).map((d, i) => (
+                    <div key={i} className="row" style={{ gap: 6, marginBottom: 4 }}>
+                      <span style={{ color: 'var(--coral)' }}>✕</span>
+                      <span className="text-sm">{d}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="row mt-8" style={{ gap: 6, flexWrap: 'wrap' }}>
+                {(dnaAnalysis.canvaStyleKeywords || []).map((k, i) => (
+                  <span key={i} style={{ background: 'rgba(201,168,92,.1)', padding: '3px 10px', fontSize: 11, color: 'var(--gold)', fontWeight: 600, borderRadius: 2 }}>{k}</span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {result && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="row-between" style={{ marginBottom: 12 }}>
+            <div className="card-title" style={{ margin: 0 }}>Genereret billedprompt</div>
+            <button className="btn btn-outline btn-sm" onClick={() => copy(result.prompt)}><Icon n="copy" /> Kopiér prompt</button>
+          </div>
+          <div className="content-section" style={{ marginBottom: 14 }}>
+            <div className="content-section-label">Prompt til Canva / AI</div>
+            <div className="content-section-text">{result.prompt}</div>
+          </div>
+          <div className="grid-3" style={{ gap: 10, marginBottom: 14 }}>
+            <div className="content-section">
+              <div className="content-section-label">Stemning</div>
+              <div className="text-sm">{result.mood}</div>
+            </div>
+            <div className="content-section">
+              <div className="content-section-label">Komposition</div>
+              <div className="text-sm">{result.composition}</div>
+            </div>
+            <div className="content-section">
+              <div className="content-section-label">Farvepalette</div>
+              <div className="row" style={{ gap: 6 }}>
+                {(result.colorPalette || []).map((c, i) => (
+                  <div key={i} style={{ width: 28, height: 28, borderRadius: 4, background: c, border: '1px solid var(--border)' }} title={c} />
+                ))}
+              </div>
+            </div>
+          </div>
+          {result.textOverlay && (
+            <div className="content-section">
+              <div className="content-section-label">Tekst overlay forslag</div>
+              <div className="text-sm"><strong>Headline:</strong> {result.textOverlay.headline}</div>
+              <div className="text-sm"><strong>Undertekst:</strong> {result.textOverlay.subtext}</div>
+              <div className="text-sm"><strong>CTA:</strong> {result.textOverlay.ctaButton}</div>
+            </div>
+          )}
+          <div className="row mt-12" style={{ gap: 6, flexWrap: 'wrap' }}>
+            <span className="text-muted" style={{ fontSize: 11 }}>Canva søgeord:</span>
+            {(result.canvaSearchTerms || []).map((t, i) => (
+              <span key={i} style={{ background: 'var(--cream)', padding: '2px 8px', fontSize: 11 }}>{t}</span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {prompts.length > 0 && (
+        <div className="card">
+          <div className="card-title">Tidligere prompts ({prompts.length})</div>
+          {prompts.slice(0, 10).map(p => (
+            <div key={p.id} className="row-between" style={{ padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="truncate text-sm" style={{ maxWidth: 500 }}>{p.prompt}</div>
+                <div className="row mt-4" style={{ gap: 8 }}>
+                  <span className="badge" style={{ background: 'var(--cream)', color: 'var(--muted)' }}>{p.format}</span>
+                  <span className="text-muted font-mono">{new Date(p.created_at || p.createdAt).toLocaleDateString('da-DK')}</span>
+                </div>
+              </div>
+              <button className="btn-ghost" onClick={() => copy(p.prompt)}><Icon n="copy" /></button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── PERFORMANCE ──
+function PerformancePage() {
+  const [stats, setStats] = useState(null);
+  const [recs, setRecs] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [loadingRecs, setLoadingRecs] = useState(false);
+
+  useEffect(() => {
+    api.get('/api/performance/stats').then(d => { setStats(d); setLoading(false); });
+  }, []);
+
+  const loadRecs = async () => {
+    setLoadingRecs(true);
+    const res = await api.get('/api/performance/recommendations');
+    setLoadingRecs(false);
+    if (!res.error) setRecs(res);
+  };
+
+  if (loading) return <div className="loading-center"><div className="spinner spinner-lg" /></div>;
+
+  const totalActions = stats?.total || 0;
+  const approved = (stats?.byAction || []).find(a => a.action === 'approved')?.count || 0;
+  const rejected = (stats?.byAction || []).find(a => a.action === 'rejected')?.count || 0;
+  const published = (stats?.byAction || []).find(a => a.action === 'published')?.count || 0;
+  const generated = (stats?.byAction || []).find(a => a.action === 'generated')?.count || 0;
+
+  return (
+    <div>
+      <div className="grid-4" style={{ marginBottom: 20 }}>
+        {[
+          { label: 'Total handlinger', value: totalActions, color: 'var(--navy)' },
+          { label: 'Genereret', value: generated, color: 'var(--gold)' },
+          { label: 'Godkendt', value: approved, color: 'var(--sage)' },
+          { label: 'Publiceret', value: published, color: 'var(--coral)' },
+        ].map(c => (
+          <div key={c.label} className="stat-card" style={{ borderTop: `3px solid ${c.color}` }}>
+            <div className="stat-value">{c.value}</div>
+            <div className="stat-label">{c.label}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="grid-2" style={{ gap: 20, marginBottom: 20 }}>
+        <div className="card">
+          <div className="card-title">Handlingsfordeling</div>
+          {totalActions === 0 ? (
+            <div className="loading-center" style={{ padding: 30 }}>
+              <span style={{ fontSize: 24, opacity: .3 }}>◕</span>
+              <p className="text-muted">Ingen data endnu. Godkend eller afvis indhold for at starte tracking.</p>
+            </div>
+          ) : (
+            <div>
+              {(stats.byAction || []).map(a => {
+                const pct = totalActions > 0 ? Math.round((parseInt(a.count) / totalActions) * 100) : 0;
+                const colors = { generated: 'var(--gold)', approved: 'var(--sage)', published: 'var(--navy)', rejected: 'var(--coral)', draft: 'var(--muted)' };
+                return (
+                  <div key={a.action} style={{ marginBottom: 12 }}>
+                    <div className="row-between" style={{ marginBottom: 4 }}>
+                      <span style={{ fontSize: 13, fontWeight: 500, textTransform: 'capitalize' }}>{a.action}</span>
+                      <span className="font-mono text-muted">{a.count} ({pct}%)</span>
+                    </div>
+                    <div style={{ height: 6, background: 'var(--border)', borderRadius: 3 }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: colors[a.action] || 'var(--muted)', borderRadius: 3, transition: 'width .5s' }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <div className="card">
+          <div className="card-title">Top godkendte vinkler</div>
+          {(stats?.topApprovedAngles || []).length === 0 ? (
+            <div className="text-muted">Ingen godkendte vinkler endnu</div>
+          ) : (
+            (stats.topApprovedAngles || []).map((a, i) => (
+              <div key={i} className="row-between" style={{ padding: '8px 0', borderBottom: i < stats.topApprovedAngles.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                <div className="row" style={{ gap: 8 }}>
+                  <span style={{ width: 20, height: 20, borderRadius: '50%', background: 'var(--cream)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 700, color: 'var(--muted)' }}>{i + 1}</span>
+                  <span style={{ fontSize: 13, fontWeight: 500 }}>{a.angle}</span>
+                </div>
+                <span className="font-mono text-muted">{a.count}x</span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="row-between" style={{ marginBottom: 16 }}>
+          <div className="card-title" style={{ margin: 0 }}>AI Anbefalinger</div>
+          <button className="btn btn-gold btn-sm" onClick={loadRecs} disabled={loadingRecs || totalActions < 3}>
+            {loadingRecs ? <span className="spinner" /> : <><Icon n="sparkle" /> Generer anbefalinger</>}
+          </button>
+        </div>
+        {totalActions < 3 && (
+          <div className="alert alert-info">Minimum 3 handlinger kræves for AI-anbefalinger. Fortsæt med at godkende/afvise indhold.</div>
+        )}
+        {recs && (
+          <div>
+            {recs.insight && (
+              <div className="content-section" style={{ marginBottom: 14 }}>
+                <div className="content-section-label">Overordnet indsigt</div>
+                <div className="content-section-text">{recs.insight}</div>
+              </div>
+            )}
+            <div className="grid-2" style={{ gap: 12, marginBottom: 14 }}>
+              {recs.preferredCategories?.length > 0 && (
+                <div className="content-section">
+                  <div className="content-section-label">Foretrukne kategorier</div>
+                  <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                    {recs.preferredCategories.map((c, i) => (
+                      <span key={i} style={{ background: '#D4EDDA', color: '#1A6535', padding: '3px 10px', fontSize: 11, fontWeight: 600, borderRadius: 2 }}>{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {recs.avoidCategories?.length > 0 && (
+                <div className="content-section">
+                  <div className="content-section-label">Undgå kategorier</div>
+                  <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+                    {recs.avoidCategories.map((c, i) => (
+                      <span key={i} style={{ background: '#FAE0DC', color: '#8C2A1E', padding: '3px 10px', fontSize: 11, fontWeight: 600, borderRadius: 2 }}>{c}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+            {(recs.recommendations || []).map((r, i) => (
+              <div key={i} className="row" style={{ gap: 8, marginBottom: 8 }}>
+                <span style={{ color: 'var(--gold)', fontWeight: 700 }}>→</span>
+                <span style={{ fontSize: 13 }}>{r}</span>
+              </div>
+            ))}
+            {recs.approvalRate && (
+              <div className="text-muted mt-12">Godkendelsesrate: {recs.approvalRate}</div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
